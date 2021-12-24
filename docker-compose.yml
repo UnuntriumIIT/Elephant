@@ -1,0 +1,18 @@
+version: '3.4'
+
+services:
+  elephant:
+    image: ${DOCKER_REGISTRY-}elephant
+    build:
+      context: .
+      dockerfile: Elephant/Dockerfile
+    ports:
+      - "80:80"
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "elephant"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "admin"
+    ports:
+      - "5432:5432"

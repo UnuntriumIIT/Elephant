@@ -48,6 +48,7 @@ namespace Elephant.Controllers
                     string imageBase64Data = Convert.ToBase64String(img.Image);
                     string imageDataURL = string.Format("data:image/jpg;base64,{0}", imageBase64Data);
                     ViewBag.ImageDataUrl = imageDataURL;
+                    ViewBag.ImgId = idd;
                 }
             }
             return View();

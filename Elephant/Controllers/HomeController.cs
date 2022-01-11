@@ -1,31 +1,34 @@
 ﻿using data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using services;
 using System;
-using System.Drawing;
 using System.IO;
+using SixLabors.ImageSharp;
 
 namespace Elephant.Controllers
 {
     public class HomeController : Controller
     {
         private readonly UserContext _context;
+
         public HomeController(UserContext context)
         {
             _context = context;
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Index(Guid id, int w, int h)
         {
+            if (id == Guid.Empty)
+            {
+
+            }
             return View();
         }
 
         [HttpPost]
         public IActionResult Index(IFormFile files)
         {
-            var idd = Guid.Empty;
             if (files != null)
             {
                 if (files.Length > 0)
@@ -36,19 +39,18 @@ namespace Elephant.Controllers
                         Image = null
                     };
 
-                    using (var target = new MemoryStream())
-                    {
-                        files.CopyTo(target);
-                        objfiles.Image = target.ToArray();
-                    }
-                    idd = objfiles.Id;
+                    var target = new MemoryStream();
+                    files.CopyTo(target);
+                    objfiles.Image = target.ToArray();
+
                     _context.Imgs.Add(objfiles);
                     _context.SaveChanges();
-                    Img img = _context.Imgs.Find(idd);
-                    string imageBase64Data = Convert.ToBase64String(img.Image);
-                    string imageDataURL = string.Format("data:image/jpg;base64,{0}", imageBase64Data);
-                    ViewBag.ImageDataUrl = imageDataURL;
-                    ViewBag.ImgId = idd;
+
+                    Image image = Image.Load(objfiles.Image);
+                    
+                    ViewBag.ImageW = image.Width;
+                    ViewBag.ImageH = image.Height;
+                    ViewBag.ImageDataUrl = string.Format("data:image/jpg;base64,{0}", Convert.ToBase64String(objfiles.Image));
                 }
             }
             return View();

@@ -37,10 +37,10 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">
-                                    <form method="post" asp-controller="Home" asp-action="Resize">
-                                        <input type="hidden" value="@ViewBag.ID" />
-                                        <input type="text" class="form-control" placeholder="Ширина" />x
-                                        <input type="text" class="form-control" placeholder="Высота" />
+                                    <form method="post" action="Home/Resize" asp-controller="Home" asp-action="Resize">
+                                        <input type="hidden" value="@ViewBag.ID" name="id"/>
+                                        <input type="text" class="form-control" placeholder="Ширина" name="width" />x
+                                        <input type="text" class="form-control" placeholder="Высота" name="height"/>
                                         <p></p>
                                         <input class="btn btn-success" type="submit" value="Ресайз!" />
                                     </form>

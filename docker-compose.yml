@@ -12,6 +12,7 @@ services:
     links:
       - "postgres:postgres"
       - "redis:redis"
+
   postgres:
     container_name: Postgres
     image: postgres:latest
@@ -21,6 +22,7 @@ services:
       POSTGRES_PASSWORD: "admin"
     ports:
       - "5432:5432"
+
   redis:
     container_name: Redis
     image: "redis:alpine"
@@ -29,3 +31,10 @@ services:
      - "6379:6379"
     environment:
      - REDIS_REPLICATION_MODE=master
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672

@@ -58,5 +58,11 @@ namespace Elephant.Controllers
             }
             return View();
         }
+
+        [HttpPost]
+        public IActionResult Resize(Guid id, int width, int height)
+        {
+            return Redirect("http://127.0.0.1:5000/resize/" + id.ToString() + '/' + width.ToString() + '/' + height.ToString());
+        }
     }   
 }

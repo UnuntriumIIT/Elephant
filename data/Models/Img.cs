@@ -16,5 +16,6 @@ namespace data
         public string SearchWord { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
+        public Guid ParentId { get; set; }
     }
 }

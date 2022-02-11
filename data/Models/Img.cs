@@ -12,5 +12,9 @@ namespace data
 
         [Required]
         public byte[] Image { get; set; }
+
+        public string SearchWord { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }

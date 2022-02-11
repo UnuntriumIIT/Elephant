@@ -2,13 +2,18 @@ version: '3.4'
 
 services:
   elephant:
+    container_name: Elephant
     image: ${DOCKER_REGISTRY-}elephant
     build:
       context: .
       dockerfile: Elephant/Dockerfile
     ports:
       - "80:80"
+    links:
+      - "postgres:postgres"
+      - "redis:redis"
   postgres:
+    container_name: Postgres
     image: postgres:latest
     environment:
       POSTGRES_DB: "elephant"
@@ -16,3 +21,11 @@ services:
       POSTGRES_PASSWORD: "admin"
     ports:
       - "5432:5432"
+  redis:
+    container_name: Redis
+    image: "redis:alpine"
+    command: redis-server --requirepass password
+    ports:
+     - "6379:6379"
+    environment:
+     - REDIS_REPLICATION_MODE=master

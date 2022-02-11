@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using data.Repository;
+using StackExchange.Redis;
 
 namespace Elephant
 {
@@ -29,6 +31,12 @@ namespace Elephant
             services.AddMvc(options => options.EnableEndpointRouting = false);
             services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Latest);
             services.AddImgList();
+            services.AddScoped<ICacheRepo, ImageCacheRepo>();
+            services.AddScoped<ICacheService, CacheService>();
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = "redis:6379,abortConnect=false,ssl=false,password=password,connectTimeout=30000,responseTimeout=30000";
+            });
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                     .AddCookie(options => //CookieAuthenticationOptions
                     {

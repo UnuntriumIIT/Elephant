@@ -4,36 +4,33 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.IO;
 using SixLabors.ImageSharp;
+using data.Repository;
 
 namespace Elephant.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly UserContext _context;
+        private readonly ICacheRepo _repo;
 
-        public HomeController(UserContext context)
+        public HomeController(ICacheRepo repo)
         {
-            _context = context;
+            _repo = repo;
         }
 
         [HttpGet]
-        public IActionResult Index(Guid id, int w, int h)
+        public IActionResult Index()
         {
-            if (id == Guid.Empty)
-            {
-
-            }
             return View();
         }
 
         [HttpPost]
-        public IActionResult Index(IFormFile files)
+        public IActionResult Index(IFormFile files, string tag)
         {
             if (files != null)
             {
                 if (files.Length > 0)
                 {
-                    var objfiles = new Img()
+                    var inputImage = new Img()
                     {
                         Id = Guid.NewGuid(),
                         Image = null
@@ -41,16 +38,22 @@ namespace Elephant.Controllers
 
                     var target = new MemoryStream();
                     files.CopyTo(target);
-                    objfiles.Image = target.ToArray();
+                    inputImage.Image = target.ToArray();
 
-                    _context.Imgs.Add(objfiles);
-                    _context.SaveChanges();
+                    Image image = Image.Load(inputImage.Image);
 
-                    Image image = Image.Load(objfiles.Image);
-                    
+                    ViewBag.ID = inputImage.Id;
                     ViewBag.ImageW = image.Width;
                     ViewBag.ImageH = image.Height;
-                    ViewBag.ImageDataUrl = string.Format("data:image/jpg;base64,{0}", Convert.ToBase64String(objfiles.Image));
+                    ViewBag.ImageDataUrl = string.Format("data:image/jpg;base64,{0}", Convert.ToBase64String(inputImage.Image));
+                    ViewBag.Tag = tag;
+
+                    inputImage.SearchWord = tag;
+                    inputImage.Width = image.Width;
+                    inputImage.Height = image.Height;
+
+
+                    _repo.Insert(inputImage);
                 }
             }
             return View();

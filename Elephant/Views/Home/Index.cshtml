@@ -12,6 +12,8 @@
             <div class="col-md-10">
                 <p>Загрузить картинку</p>
                 <input class="form-control" name="files" type="file" />
+                <br>
+                <input type="text" class="form-control" name="tag" placeholder="Тег" />
             </div>
         </div>
         <div class="form-group">
@@ -27,6 +29,7 @@
                     <div class="card mb-4 box-shadow">
                         <img class="card-body" alt="Your image" style="height: 225px; width: 100%; display: block;" src="@ViewBag.ImageDataUrl" data-holder-rendered="true">
                         <p>@ViewBag.ImageW x @ViewBag.ImageH</p>
+                        <p>@ViewBag.Tag</p>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -35,6 +38,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">
                                     <form method="post" asp-controller="Home" asp-action="Resize">
+                                        <input type="hidden" value="@ViewBag.ID" />
                                         <input type="text" class="form-control" placeholder="Ширина" />x
                                         <input type="text" class="form-control" placeholder="Высота" />
                                         <p></p>

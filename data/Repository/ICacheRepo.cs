@@ -11,5 +11,6 @@ namespace data.Repository
         Img GetSingle(Guid id);
         Img[] GetAllByTag(string tag);
         void Insert(Img img);
+        void UpdateInCacheResize(Guid id);
     }
 }

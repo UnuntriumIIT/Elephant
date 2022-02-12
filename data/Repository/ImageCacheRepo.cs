@@ -16,7 +16,7 @@ namespace data.Repository
         }
 
         public Img GetSingle(Guid id)
-        {
+        {/*
             var cached = _cache.Get<Img>(id.ToString());
 
             if (cached != null)
@@ -26,6 +26,21 @@ namespace data.Repository
             {
                 var result = _context.Imgs.Find(id);
                 return _cache.Set<Img>(id.ToString(), result);
+            }*/
+            return _context.Imgs.Find(id);
+        }
+
+        public void UpdateInCacheResize(Guid id)
+        {
+            var cached = _cache.Get<Img>(id.ToString());
+            
+            if (cached != null)
+            {
+                while (cached.ParentId == Guid.Parse("00000000-0000-0000-0000-000000000000"))
+                {
+                    cached = _cache.Get<Img>(id.ToString());
+                    _cache.Set<Img>(id.ToString(), _context.Imgs.Find(id));
+                }
             }
         }
 

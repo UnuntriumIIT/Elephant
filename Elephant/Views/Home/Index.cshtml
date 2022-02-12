@@ -4,14 +4,14 @@
 
 <div class="text-center">
     <h1 class="display-4">Ресайзинг картинок</h1>
-    <p>Выбираете картинку (JPEG/PNG/BMP), указываете нужный размер, а далее дело за нами ;)</p>
+    <p>Выбираете картинку (JPEG), указываете нужный размер, а далее дело за нами ;)</p>
 </div>
 <div class="text-center justify-content-md-center">
     <form method="post" enctype="multipart/form-data" asp-controller="Home" asp-action="Index">
         <div class="form-group">
             <div class="col-md-10">
                 <p>Загрузить картинку</p>
-                <input class="form-control" name="files" type="file" />
+                <input class="form-control" name="files" type="file" accept=".jpg, .jpeg"/>
                 <br>
                 <input type="text" class="form-control" name="tag" placeholder="Тег" />
             </div>
@@ -39,8 +39,8 @@
                                 <div class="btn-group">
                                     <form method="post" action="Home/Resize" asp-controller="Home" asp-action="Resize">
                                         <input type="hidden" value="@ViewBag.ID" name="id"/>
-                                        <input type="text" class="form-control" placeholder="Ширина" name="width" />x
-                                        <input type="text" class="form-control" placeholder="Высота" name="height"/>
+                                        <input type="text" class="form-control" placeholder="Ширина" name="width" pattern="^\d*$" />x
+                                        <input type="text" class="form-control" placeholder="Высота" name="height" pattern="^\d*$"/>
                                         <p></p>
                                         <input class="btn btn-success" type="submit" value="Ресайз!" />
                                     </form>

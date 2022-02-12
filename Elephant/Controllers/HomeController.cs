@@ -18,8 +18,12 @@ namespace Elephant.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Index(string id)
         {
+            if (id != "" && id != null)
+            {
+                return Redirect("/Home/Download/"+id);
+            }
             return View();
         }
 
@@ -62,7 +66,24 @@ namespace Elephant.Controllers
         [HttpPost]
         public IActionResult Resize(Guid id, int width, int height)
         {
+
             return Redirect("http://127.0.0.1:5000/resize/" + id.ToString() + '/' + width.ToString() + '/' + height.ToString());
+        }
+
+        [HttpGet]
+        public IActionResult Download(string id)
+        {
+            //_repo.UpdateInCacheResize(Guid.Parse(id));
+            var img = _repo.GetSingle(Guid.Parse(id));
+            var childImg = _repo.GetSingle(img.ParentId);/*
+            Response.Clear();
+            Response.Headers.Clear();
+            Response.ContentType = "image/jpg";
+            Response.Headers.Append("Content-Length", childImg.Image.Length.ToString());
+            
+            Response.Headers.Append("Connection", "close");
+            Response.Body.WriteAsync(childImg.Image, 0, childImg.Image.Length);*/
+            return File(childImg.Image, "image/jpg", img.SearchWord + ".jpg");
         }
     }   
 }

@@ -37,11 +37,6 @@ namespace Elephant
             {
                 options.Configuration = "redis:6379,abortConnect=false,ssl=false,password=password,connectTimeout=30000,responseTimeout=30000";
             });
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                    .AddCookie(options => //CookieAuthenticationOptions
-                    {
-                        options.LoginPath = new PathString("/Account/Login");
-                    });
 
             services.AddControllersWithViews();
         }
@@ -60,8 +55,6 @@ namespace Elephant
             app.UseStaticFiles();
 
             app.UseRouting();
-            app.UseAuthentication();
-            app.UseAuthorization();
 
             app.UseMvc(routes =>
             {

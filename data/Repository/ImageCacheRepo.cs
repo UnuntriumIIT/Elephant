@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace data.Repository
 {
@@ -32,16 +34,7 @@ namespace data.Repository
 
         public void UpdateInCacheResize(Guid id)
         {
-            var cached = _cache.Get<Img>(id.ToString());
             
-            if (cached != null)
-            {
-                while (cached.ParentId == Guid.Parse("00000000-0000-0000-0000-000000000000"))
-                {
-                    cached = _cache.Get<Img>(id.ToString());
-                    _cache.Set<Img>(id.ToString(), _context.Imgs.Find(id));
-                }
-            }
         }
 
         public Img[] GetAllByTag(string tag)

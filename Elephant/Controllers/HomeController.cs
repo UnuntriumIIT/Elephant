@@ -6,6 +6,8 @@ using System.IO;
 using SixLabors.ImageSharp;
 using data.Repository;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using Npgsql;
 
 namespace Elephant.Controllers
 {
@@ -72,14 +74,20 @@ namespace Elephant.Controllers
 
         [HttpGet]
         public IActionResult Download(Guid id, Guid newid)
-        {
-            using (var context = new UserContext(new DbContextOptionsBuilder().UseNpgsql("Server=postgres;Port=5432;Database=elephant;UserId=postgres;Password=admin;").Options))
+        {/*
+            using (var context = new NpgsqlConnection("Server=postgres;Port=5432;Database=elephant;UserId=postgres;Password=admin;"))
             {
-                var img = context.Imgs.Find(id);
-                var childImg = context.Imgs.Find(newid);
-                context.Dispose();
-                return File(childImg.Image, "image/jpg", img.SearchWord + ".jpg");
-            }
+                context.Open();
+                var command = new NpgsqlCommand("SELECT \"SearchWord\" FROM public.\"Img\" WHERE \"Id\" = \'"+id+"\'", context);
+                string SearchWord = command.ExecuteScalar().ToString();
+                command = new NpgsqlCommand("SELECT \"Image\" FROM public.\"Img\" WHERE \"Id\" = \'" + newid + "\'", context);
+                byte[] img = (byte[])command.ExecuteScalar();
+                context.Close();
+                return File(img, "image/jpg", (SearchWord != "" ? SearchWord : "image") + ".jpg");
+            }*/
+            var img = _repo.GetSingle(id);
+            var chimg = _repo.GetSingle(newid);
+            return File(chimg.Image, "image/jpg", (img.SearchWord != "" ? img.SearchWord : "image") + ".jpg");
         }
     }   
 }

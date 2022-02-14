@@ -19,7 +19,6 @@ def callback(ch, method, properties, body):
                                 port="5432",
                                 database="elephant")
     b = body.decode()
-    time.sleep(body.count(b'.'))
     params = str(b).split(';')
     print('consumed: '+ b)
     id = params[0]

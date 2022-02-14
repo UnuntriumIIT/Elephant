@@ -7,7 +7,8 @@ api = Flask(__name__)
 
 @api.route('/resize/<id>/<width>/<height>', methods=['GET'])
 def handleRequest(id,width,height):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('127.0.0.1'))
+    credentials = pika.PlainCredentials('user', 'password')
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq', 5672, '/', credentials))
     channel = connection.channel()
     channel.queue_declare(queue='resizequeue' , durable=True, exclusive=False, auto_delete=False)
     channel.confirm_delivery()
@@ -28,4 +29,4 @@ def handleRequest(id,width,height):
     
 
 if __name__ == '__main__':
-    api.run() 
+    api.run(host="api_10", port=5000) 

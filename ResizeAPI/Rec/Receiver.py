@@ -2,10 +2,9 @@ import pika
 import io
 import psycopg2
 import PIL.Image as Image
-import time
 
-
-connection = pika.BlockingConnection(pika.ConnectionParameters('127.0.0.1'))
+credentials = pika.PlainCredentials('user', 'password')
+connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq', 5672, '/', credentials))
 channel = connection.channel()
 
 channel.queue_declare(queue='resizequeue' , durable=True, exclusive=False, auto_delete=False)
@@ -15,7 +14,7 @@ print('\nWaiting for messages. To exit press CTRL+C\n');
 def callback(ch, method, properties, body):
     conn = psycopg2.connect(user="postgres",
                                 password="admin",
-                                host="127.0.0.1",
+                                host="postgres",
                                 port="5432",
                                 database="elephant")
     b = body.decode()

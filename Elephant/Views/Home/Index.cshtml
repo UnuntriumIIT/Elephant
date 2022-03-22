@@ -1,55 +1,10 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
-
 <div class="text-center">
-    <h1 class="display-4">Ресайзинг картинок</h1>
-    <p>Выбираете картинку (JPEG), указываете нужный размер, а далее дело за нами ;)</p>
-</div>
-<div class="text-center justify-content-md-center">
-    <form method="post" enctype="multipart/form-data" asp-controller="Home" asp-action="Index">
-        <div class="form-group">
-            <div class="col-md-10">
-                <p>Загрузить картинку</p>
-                <input class="form-control" name="files" type="file" accept=".jpg, .jpeg"/>
-                <br>
-                <input type="text" class="form-control" name="tag" placeholder="Тег" />
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="col-md-10">
-                <input class="btn btn-success" type="submit" value="Загрузить" />
-            </div>
-        </div>
-    </form>
-    <div class="album py-5 bg-light">
-        <div class="container">
-            <div class="row justify-content-md-center">
-                <div class="col-md-4">
-                    <div class="card mb-4 box-shadow">
-                        <img class="card-body" alt="Your image" style="height: 225px; width: 100%; display: block;" src="@ViewBag.ImageDataUrl" data-holder-rendered="true">
-                        <p>@ViewBag.ImageW x @ViewBag.ImageH</p>
-                        <p>@ViewBag.Tag</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card mb-4 box-shadow">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="btn-group">
-                                    <form method="post" action="Home/Resize" asp-controller="Home" asp-action="Resize">
-                                        <input type="hidden" value="@ViewBag.ID" name="id" />
-                                        <input type="text" class="form-control" placeholder="Ширина" name="width" pattern="^\d*$" />x
-                                        <input type="text" class="form-control" placeholder="Высота" name="height" pattern="^\d*$" />
-                                        <p></p>
-                                        <input class="btn btn-success" type="submit" value="Ресайз!" />
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <h1>
+        АДМИНКА
+    </h1>
+    <div>Тут будет кнопка в список категорий</div>
+    <div>Тут будет кнопка в список товаров</div>
 </div>

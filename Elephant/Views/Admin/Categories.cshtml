@@ -15,7 +15,6 @@
         <tr>
             <th scope="col">ID</th>
             <th scope="col">Название</th>
-            <th scope="col">Товаров с категорией</th>
             <th scope="col"></th>
         </tr>
     </thead>
@@ -23,9 +22,8 @@
         @foreach (var item in ViewData["categories"] as IEnumerable<Elephant.Models.Category>)
             {
         <tr>
-            <th scope="row">@Html.DisplayFor(a => item.Id)</th>
+            <td>@Html.DisplayFor(a => item.Id)</td>
             <td>@Html.DisplayFor(a => item.Name)</td>
-            <td>0</td>
             <td>
                 <a href="/admin/editcategory/@item.Id" 
                    class="btn btn-light d-inline-flex m-2" 

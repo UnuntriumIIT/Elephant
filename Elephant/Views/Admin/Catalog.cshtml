@@ -1,3 +1,55 @@
 ﻿@{
     ViewData["Title"] = "Catalog - Admin page";
 }
+<div class="text-center">
+    <h1>Товары</h1>
+</div>
+<div class="d-flex justify-content-end">
+    <div>
+        <a href="/admin/addproduct" class="btn btn-info d-inline-flex m-2" role="button">Добавить товар</a>
+    </div>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Название</th>
+            <th scope="col">Картинка</th>
+            <th scope="col">Стоимость</th>
+            <th scope="col">Количество</th>
+            <th scope="col">Категория</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in ViewData["products"] as IEnumerable<Elephant.Models.Product>)
+        {
+            <tr>
+                <td>@Html.DisplayFor(a => item.Id)</td>
+                <td>@Html.DisplayFor(a => item.Name)</td>
+                <td>@Html.DisplayFor(a => item.Image_src)</td>
+                <td>@Html.DisplayFor(a => item.Price)</td>
+                <td>@Html.DisplayFor(a => item.Quantity)</td>
+                <td>@Html.DisplayFor(a => (ViewData["categoriesAssign"] as IEnumerable<Elephant.Models.Category>)
+                                                .Where(p => p.Id.ToString() == item.Category_id).FirstOrDefault().Name)</td>
+                <td>
+                    <a href="/admin/editproduct/@item.Id"
+                        class="btn btn-light d-inline-flex m-2"
+                        role="button">
+                        <img width="25"
+                                height="25"
+                                src="https://www.pngrepo.com/png/80406/512/pencil.png">
+                    </a>
+                    <a href="/admin/deleteproduct/@item.Id"
+                        class="btn btn-light d-inline-flex m-2"
+                        role="button">
+                        <img width="25"
+                                height="25"
+                                src="https://www.iconpacks.net/icons/1/free-trash-icon-347-thumb.png">
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

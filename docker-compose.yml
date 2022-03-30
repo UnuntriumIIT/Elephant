@@ -11,6 +11,7 @@ services:
       - "80:80"
     links:
       - "postgres:postgres"
+      - "admin_api:admin_api"
     networks:
       - nginx_network
 
@@ -27,13 +28,15 @@ services:
       - nginx_network
 
   admin_api:
-    container_name: admin_api
+    container_name: Admin_api
     restart: always
     build:
       context: .
       dockerfile: api/admin/Dockerfile
     ports:
       - "5000:5000"
+    links:
+      - "postgres:postgres"
     networks:
       - nginx_network
 

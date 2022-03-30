@@ -2,17 +2,22 @@
     ViewData["Title"] = "Categories - Admin page";
 }
 <div class="text-center">
-    <h1>Добавить категорию</h1>
+    <h1>Редактировать категорию</h1>
 </div>
 <div class="d-flex justify-content-end">
     <div>
         <a href="/admin/categories" class="btn btn-info d-inline-flex m-2" role="button">< Вернуться к списку</a>
     </div>
 </div>
-<form method="post" action="http://localhost:5000/api/category/@ViewData["UUID"]">
+<form method="post" action="http://localhost:5000/api/category/@ViewData["CategoryID"]">
+    <input type="hidden" name="_method" value="put">
+    <div class="form-group">
+        <label for="formGroupExampleInput">ID</label>
+        <input class="form-control" type="text" value="@ViewData["CategoryID"]" readonly>
+    </div>
     <div class="form-group">
         <label for="formGroupExampleInput">Название категории</label>
-        <input type="text" class="form-control" name="name" placeholder="Название категории">
+        <input type="text" class="form-control" name="name" placeholder="Название категории" value="@ViewData["CategoryName"]">
     </div>
     <div class="form-group">
         <button type="submit" class="btn btn-info">Сохранить</button>

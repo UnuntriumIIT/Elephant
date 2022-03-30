@@ -1,114 +1,140 @@
-from flask import Flask
-from flask_restful import Api, Resource, reqparse
+from flask import Flask, redirect, request
+from flask_restful import Api, Resource
 import json
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from psycopg2 import Error
+from psycopg2.extras import RealDictCursor
+
 app = Flask(__name__)
 api = Api(app)
-ai_quotes = [
-    {
-        "id": 0,
-        "name": "Kevin Kelly",
-        "quantity": "47"
-    },
-    {
-        "id": 1,
-        "name": "Stephen Hawking",
-        "quantity": "99"
-    },
-    {
-        "id": 2,
-        "name": "Claude Shannon",
-        "quantity": "48"
-    },
-    {
-        "id": 3,
-        "name": "Elon Musk",
-        "quantity": "11"
-    },
-    {
-        "id": 4,
-        "name": "Geoffrey Hinton",
-        "quantity": "66"
-    },
-    {
-        "id": 5,
-        "name": "Pedro Domingos",
-        "quantity": "51"
-    },
-    {
-        "id": 6,
-        "name": "Alan Turing",
-        "quantity": "23"
-    },
-    {
-        "id": 7,
-        "name": "Ray Kurzweil",
-        "quantity": "9"
-    },
-    {
-        "id": 8,
-        "name": "Sebastian Thrun",
-        "quantity": "31"
-    },
-    {
-        "id": 9,
-        "name": "Andrew Ng",
-        "quantity": "74"
-    }
-]
 
+# Класс отвечающий за api категорий
 class Category(Resource):
+    
+    # Возвращает все записи из базы данных для отображения в таблице
+    def get_all_records(self):
+        try:
+            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute('''
+                           SELECT t.*
+                           FROM public."Category" t
+                           ''')
+            result = cursor.fetchall()
+            print(result)
+            return result
+        except (Exception, Error) as error:
+               print("Ошибка при работе с PostgreSQL", error)
+        finally:
+            if conn:
+                cursor.close()
+                conn.close()
+                print("Соединение с PostgreSQL закрыто") 
+    
+    # Возвращает инфу о категории по конкретному id
+    def get_record_by_id(self, id):
+        try:
+            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute('''
+                           SELECT t.*
+                           FROM public."Category" t
+                           WHERE id = '%s'
+                           '''%(id))
+            result = cursor.fetchall()
+            print(result)
+            return result
+        except (Exception, Error) as error:
+               print("Ошибка при работе с PostgreSQL", error)
+        finally:
+            if conn:
+                cursor.close()
+                conn.close()
+                print("Соединение с PostgreSQL закрыто") 
+                
+    def post_new_record(self, id, name):
+        try:
+            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute('''
+                           INSERT INTO public."Category" (id, "Name")
+                           VALUES ('%s'::text, '%s'::text);'''%(id, name))
+        except (Exception, Error) as error:
+               print("Ошибка при работе с PostgreSQL", error)
+        finally:
+            if conn:
+                cursor.close()
+                conn.close()
+                print("Соединение с PostgreSQL закрыто")    
+    
+    def put_record_by_id(self, id, name):
+        try:
+            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute('''
+                           UPDATE public."Category"
+                           SET "Name" = '%s'::text
+                           WHERE id LIKE '%s' ESCAPE '#';'''%(name, id))
+        except (Exception, Error) as error:
+               print("Ошибка при работе с PostgreSQL", error)
+        finally:
+            if conn:
+                cursor.close()
+                conn.close()
+                print("Соединение с PostgreSQL закрыто") 
+    
+    def delete_record_by_id(self, id):
+        try:
+            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute('''
+                           DELETE
+                           FROM public."Category"
+                           WHERE id LIKE '%s' ESCAPE '#';'''%(id))
+        except (Exception, Error) as error:
+               print("Ошибка при работе с PostgreSQL", error)
+        finally:
+            if conn:
+                cursor.close()
+                conn.close()
+                print("Соединение с PostgreSQL закрыто") 
+        
+        
+                
     def get(self, id=0):
-        global ai_quotes
         if id == 0:
-            return ai_quotes, 200
-        for quote in ai_quotes:
-            if(quote["id"] == id):
-                return quote, 200
+            return json.dumps(self.get_all_records()), 200
+        else:
+            return json.dumps(self.get_record_by_id(id)), 200
         return "Category not found with id = "+ str(id), 404
     
-    def post(self, id):
-        global ai_quotes
-        parser = reqparse.RequestParser()
-        parser.add_argument("name")
-        parser.add_argument("quantity")
-        params = parser.parse_args()
-        for quote in ai_quotes:
-            if(id == quote["id"]):
-                return f"Category with id {id} already exists", 400
-        quote = {
-            "id": int(id),
-            "name": params["name"],
-            "quantity": params["quantity"]
-        }
-        ai_quotes.append(quote)
-        return quote, 201
-  
     def put(self, id):
-        global ai_quotes
-        parser = reqparse.RequestParser()
-        parser.add_argument("name")
-        parser.add_argument("quantity")
-        params = parser.parse_args()
-        for quote in ai_quotes:
-            if(id == quote["id"]):
-                quote["name"] = params["name"]
-                quote["quantity"] = params["quantity"]
-                return quote, 200
-        
-        quote = {
-            "id": id,
-            "name": params["name"],
-            "quantity": params["quantity"]
-        }
-        
-        ai_quotes.append(quote)
-        return quote, 201
+        name = request.form.get('name')
+        if(not self.get_record_by_id(id)):
+            return "Category with id %s does not exists"%(id), 400
+        self.put_record_by_id(id, name)
+        return redirect("http://localhost/admin/categories"), 200 
+    
+    def post(self, id):
+        if (request.form.get('_method') == 'put'):
+            self.put(id)
+        else:
+            name = request.form.get('name')
+            if(self.get_record_by_id(id)):
+                return "Category with id %s already exists"%(id), 400
+            self.post_new_record(id, name)
+        return redirect("http://localhost/admin/categories"), 200
   
     def delete(self, id):
-        global ai_quotes
-        ai_quotes = [qoute for qoute in ai_quotes if qoute["id"] != id]
-        return f"Category with id {id} is deleted.", 200
+        self.delete_record_by_id(id)
+        return redirect("http://localhost/admin/categories"), 200
 
-api.add_resource(Category, "/api/category", "/api/category", "/api/category/<int:id>")
+api.add_resource(Category, "/api/category", "/api/category", "/api/category/<string:id>")
 if __name__ == '__main__':
     app.run(debug=True)

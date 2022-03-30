@@ -20,23 +20,29 @@
         </tr>
     </thead>
     <tbody>
+        @foreach (var item in ViewData["categories"] as IEnumerable<Elephant.Models.Category>)
+            {
         <tr>
-            <th scope="row">1</th>
-            <td>Тест 1</td>
+            <th scope="row">@Html.DisplayFor(a => item.Id)</th>
+            <td>@Html.DisplayFor(a => item.Name)</td>
             <td>0</td>
-            <td></td>
+            <td>
+                <a href="/admin/editcategory/@item.Id" 
+                   class="btn btn-light d-inline-flex m-2" 
+                   role="button">
+                    <img width="25" 
+                         height="25" 
+                         src="https://www.pngrepo.com/png/80406/512/pencil.png">
+                </a>
+                <a href="/admin/deletecategory/@item.Id" 
+                   class="btn btn-light d-inline-flex m-2" 
+                   role="button">
+                    <img width="25" 
+                         height="25" 
+                         src="https://www.iconpacks.net/icons/1/free-trash-icon-347-thumb.png">
+                </a>
+            </td>
         </tr>
-        <tr>
-            <th scope="row">2</th>
-            <td>Тест 2</td>
-            <td>0</td>
-            <td></td>
-        </tr>
-        <tr>
-            <th scope="row">3</th>
-            <td>Тест 3</td>
-            <td>0</td>
-            <td></td>
-        </tr>
+            }
     </tbody>
 </table>

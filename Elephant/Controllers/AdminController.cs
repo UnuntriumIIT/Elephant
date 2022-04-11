@@ -51,9 +51,18 @@ namespace Elephant.Controllers
             return View();
         }
 
-        public IActionResult AddCategory()
+        public async Task<IActionResult> AddCategory()
         {
             ViewData["UUID"] = Guid.NewGuid().ToString();
+            using (var client = new HttpClient())
+            {
+                var uri = new Uri("http://admin_api:5000/api/category");
+                var response = await client.GetAsync(uri);
+                string json = await response.Content.ReadAsStringAsync();
+                var jsonResult = JsonConvert.DeserializeObject(json).ToString();
+                var result = JsonConvert.DeserializeObject<List<Category>>(jsonResult);
+                ViewData["catsForChilds"] = result ?? new List<Category>();
+            }
             return View();
         }
 
@@ -68,6 +77,21 @@ namespace Elephant.Controllers
                 var result = JsonConvert.DeserializeObject<List<Category>>(jsonResult);
                 ViewData["CategoryID"] = result[0].Id;
                 ViewData["CategoryName"] = result[0].Name;
+                ViewData["ParentID"] = result[0].ParentId ?? Guid.Empty;
+
+                var uri2 = new Uri("http://admin_api:5000/api/category");
+                var response2 = await client.GetAsync(uri2);
+                string json2 = await response2.Content.ReadAsStringAsync();
+                var jsonResult2 = JsonConvert.DeserializeObject(json2).ToString();
+                var result2 = JsonConvert.DeserializeObject<List<Category>>(jsonResult2);
+                ViewData["catsForChilds"] = result2 ?? new List<Category>();
+
+                var uri1 = new Uri("http://admin_api:5000/api/categorychilds/" + id);
+                var response1 = await client.GetAsync(uri1);
+                string json1 = await response1.Content.ReadAsStringAsync();
+                var jsonResult1 = JsonConvert.DeserializeObject(json1).ToString();
+                var result1 = JsonConvert.DeserializeObject<List<Category>>(jsonResult1);
+                ViewData["child_categories"] = result1 ?? new List<Category>();
             }
             return View();
         }

@@ -5,6 +5,7 @@ import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from psycopg2 import Error
 from psycopg2.extras import RealDictCursor
+import os
 
 app = Flask(__name__)
 api = Api(app)
@@ -15,13 +16,15 @@ class Category(Resource):
     # Возвращает все записи из базы данных для отображения в таблице
     def get_all_records(self):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
                            SELECT t.*
-                           FROM public."Category" t
-                           ''')
+                           FROM public."Category_Major" t''')
             result = cursor.fetchall()
             return result
         except (Exception, Error) as error:
@@ -35,12 +38,15 @@ class Category(Resource):
     # Возвращает инфу о категории по конкретному id
     def get_record_by_id(self, id):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
                            SELECT t.*
-                           FROM public."Category" t
+                           FROM public."Category_Major" t
                            WHERE id = '%s'
                            '''%(id))
             result = cursor.fetchall()
@@ -53,14 +59,17 @@ class Category(Resource):
                 conn.close()
                 print("Соединение с PostgreSQL закрыто") 
                 
-    def post_new_record(self, id, name):
+    def post_new_record(self, id, name, parentId):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
-                           INSERT INTO public."Category" (id, "Name")
-                           VALUES ('%s'::text, '%s'::text);'''%(id, name))
+                           INSERT INTO public."Category_Major" (id, "Name", "ParentId")
+                           VALUES ('%s'::text, '%s'::text, %s);'''%(id, name, parentId))
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
@@ -69,15 +78,18 @@ class Category(Resource):
                 conn.close()
                 print("Соединение с PostgreSQL закрыто")    
     
-    def put_record_by_id(self, id, name):
+    def put_record_by_id(self, id, name, parentId):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
-                           UPDATE public."Category"
-                           SET "Name" = '%s'::text
-                           WHERE id LIKE '%s' ESCAPE '#';'''%(name, id))
+                           UPDATE public."Category_Major"
+                           SET "Name" = '%s'::text, "ParentId" = %s
+                           WHERE id LIKE '%s' ESCAPE '#';'''%(name, parentId, id))
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
@@ -88,12 +100,15 @@ class Category(Resource):
     
     def delete_record_by_id(self, id):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
                            DELETE
-                           FROM public."Category"
+                           FROM public."Category_Major"
                            WHERE id LIKE '%s' ESCAPE '#';'''%(id))
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
@@ -103,7 +118,7 @@ class Category(Resource):
                 conn.close()
                 print("Соединение с PostgreSQL закрыто") 
                    
-    def get(self, id=0):
+    def get(self, id=0):        
         if id == 0:
             return json.dumps(self.get_all_records()), 200
         else:
@@ -112,25 +127,59 @@ class Category(Resource):
     
     def post(self, id):
         name = request.form.get('name')
+        parentId = request.form.get('parcats')
+        if (parentId != 'NULL'):
+                parentId = "'"+ parentId +"'"
         if (request.form.get('_method') == 'put'):
             if(not self.get_record_by_id(id)):
                 return "Category with id %s does not exists"%(id), 400
-            self.put_record_by_id(id, name)
+            self.put_record_by_id(id, name, parentId)
         else:
             if(self.get_record_by_id(id)):
                 return "Category with id %s already exists"%(id), 400
-            self.post_new_record(id, name)
-        return redirect("http://localhost/admin/categories", code=302)
+            self.post_new_record(id, name, parentId)
+        return redirect("http://localhost/admin/categories", code=303)
   
     def delete(self, id):
         self.delete_record_by_id(id)
         return 'Success', 200
+    
+class Childs(Resource):
+    def get_all_childs(self, id):
+        try:
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
+            conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute('''
+                           SELECT t.*
+                           FROM public."Category_Major" t
+                           WHERE "ParentId" = '%s' '''%(id))
+            result = cursor.fetchall()
+            return result
+        except (Exception, Error) as error:
+               print("Ошибка при работе с PostgreSQL", error)
+        finally:
+            if conn:
+                cursor.close()
+                conn.close()
+                print("Соединение с PostgreSQL закрыто")
+
+    def get(self, id=0):        
+        if id != 0:
+            return json.dumps(self.get_all_childs(id)), 200
+        return "Category not found with id = "+ str(id), 404
 
 class Product(Resource):
 
     def delete_record_by_id(self, id):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
@@ -147,7 +196,10 @@ class Product(Resource):
 
     def get_all_records(self):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
@@ -166,7 +218,10 @@ class Product(Resource):
 
     def get_record_by_id(self, id):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
@@ -186,7 +241,10 @@ class Product(Resource):
 
     def post_new_record(self, id, name, image_src, price, quantity, category_id):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
@@ -202,7 +260,10 @@ class Product(Resource):
              
     def put_record_by_id(self, id, name, image_src, price, quantity, category_id):
         try:
-            conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+            conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
@@ -253,18 +314,22 @@ class Product(Resource):
         return 'Success', 200
 
 try:
-    conn = psycopg2.connect(dbname='elephant', user='postgres', password='admin', host='postgres')
+    conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
+                                    user=os.environ['DB_USER'], 
+                                    password=os.environ['DB_PASS'], 
+                                    host=os.environ['DB_HOST'])
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cursor = conn.cursor()
     cursor.execute('''
-                    create table if not exists "Category"
+                    create table if not exists "Category_Major"
                     (
                         id     text not null
                             constraint category_pk
                                 primary key,
-                        "Name" text not null
+                        "Name" text not null,
+                        "ParentId" text
                         );
-                    alter table "Category"
+                    alter table "Category_Major"
                         owner to postgres;''')
     cursor.execute('''
                     create table if not exists "Product"
@@ -278,7 +343,7 @@ try:
                         quantity int default 0 not null,
 	                    category_id text
 		                    constraint product_category_id_fk
-			                    references "Category"
+			                    references "Category_Major"
                     );''')
 except (Exception, Error) as error:
         print("Ошибка при работе с PostgreSQL", error)
@@ -289,6 +354,5 @@ finally:
         print("Соединение с PostgreSQL закрыто")
         
 api.add_resource(Category, "/api/category", "/api/category", "/api/category/<string:id>")
+api.add_resource(Childs, "/api/categorychilds/<string:id>")
 api.add_resource(Product, "/api/catalog", "/api/catalog", "/api/catalog/<string:id>")
-if __name__ == '__main__':
-    app.run(debug=True)

@@ -39,6 +39,8 @@ services:
       - "postgres:postgres"
     networks:
       - nginx_network
+    env_file:
+      - api/admin/api_variables.env
 
 networks:
    nginx_network:

@@ -6,12 +6,39 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from psycopg2 import Error
 from psycopg2.extras import RealDictCursor
 import os
+import pika
 
 app = Flask(__name__)
 api = Api(app)
 
 # Класс отвечающий за api категорий
 class Category(Resource):
+    
+    def send_message(self, header, body):
+        credentials = pika.PlainCredentials(os.environ['RABBIT_USER'], 
+                                            os.environ['RABBIT_PASSWORD'])
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(os.environ['RABBIT_HOST'], 
+                                      os.environ['RABBIT_PORT'], 
+                                      '/', 
+                                      credentials))
+        
+        channel = connection.channel()
+        channel.queue_declare(queue=os.environ['RABBIT_QUEUE'] , 
+                              durable=True, 
+                              exclusive=False, 
+                              auto_delete=False)
+        channel.confirm_delivery()
+        try:
+            channel.basic_publish(exchange='',
+                          routing_key=os.environ['RABBIT_QUEUE'],
+                          body=json.dumps(body),
+                          properties=pika.BasicProperties(content_type='text/plain',
+                                                              delivery_mode=1,
+                                                              headers={'event': header}))
+            print('publish: '+header+ " " + body)        
+        except pika.exceptions.UnroutableError as error:
+            print(error)
 
     # Возвращает все записи из базы данных для отображения в таблице
     def get_all_records(self):
@@ -70,6 +97,8 @@ class Category(Resource):
             cursor.execute('''
                            INSERT INTO public."Category_Major" (id, "Name", "ParentId")
                            VALUES ('%s'::text, '%s'::text, %s);'''%(id, name, parentId))
+            body = [{"Id" : id, "Name" : name, "ParentId": parentId}]
+            self.send_message('CategoryCreated', body)
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
@@ -90,6 +119,8 @@ class Category(Resource):
                            UPDATE public."Category_Major"
                            SET "Name" = '%s'::text, "ParentId" = %s
                            WHERE id LIKE '%s' ESCAPE '#';'''%(name, parentId, id))
+            body = [{"Id" : id, "Name" : name, "ParentId": parentId}]
+            self.send_message('CategoryChanged', body)
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
@@ -110,6 +141,8 @@ class Category(Resource):
                            DELETE
                            FROM public."Category_Major"
                            WHERE id LIKE '%s' ESCAPE '#';'''%(id))
+            body = [{"Id" : id}]
+            self.send_message('CategoryDeleted', body)
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
@@ -173,6 +206,32 @@ class Childs(Resource):
         return "Category not found with id = "+ str(id), 404
 
 class Product(Resource):
+    
+    def send_message(self, header, body):
+        credentials = pika.PlainCredentials(os.environ['RABBIT_USER'], 
+                                            os.environ['RABBIT_PASSWORD'])
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(os.environ['RABBIT_HOST'], 
+                                      os.environ['RABBIT_PORT'], 
+                                      '/', 
+                                      credentials))
+        
+        channel = connection.channel()
+        channel.queue_declare(queue=os.environ['RABBIT_QUEUE'] , 
+                              durable=True, 
+                              exclusive=False, 
+                              auto_delete=False)
+        channel.confirm_delivery()
+        try:
+            channel.basic_publish(exchange='',
+                          routing_key=os.environ['RABBIT_QUEUE'],
+                          body=json.dumps(body),
+                          properties=pika.BasicProperties(content_type='text/plain',
+                                                              delivery_mode=1,
+                                                              headers={'event': header}))
+            print('publish: '+header+ " " + body)        
+        except pika.exceptions.UnroutableError as error:
+            print(error)
 
     def delete_record_by_id(self, id):
         try:
@@ -186,6 +245,8 @@ class Product(Resource):
                            DELETE
                            FROM public."Product"
                            WHERE id LIKE '%s' ESCAPE '#';'''%(id))
+            body = [{"Id" : id}]
+            self.send_message('ProductDeleted', body)
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
@@ -250,6 +311,8 @@ class Product(Resource):
             cursor.execute('''
                             INSERT INTO public."Product" (id, name, image_src, price, quantity, category_id)
                             VALUES ('%s'::text, '%s'::text, '%s'::text, %s::numeric, %s::integer, %s);'''%(id, name, image_src, price, quantity, category_id))
+            body = [{"Id": id, "Name": name, "Image_src": image_src, "Price": price, "Quantity": quantity, "Category_id": category_id}]
+            self.send_message('ProductCreated', body)
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
@@ -275,6 +338,8 @@ class Product(Resource):
                                 quantity    = %s::integer,
                                 category_id = %s
                             WHERE id LIKE '%s' ESCAPE '#';'''%(name, image_src, price, quantity, category_id, id))
+            body = [{"Id": id, "Name": name, "Image_src": image_src, "Price": price, "Quantity": quantity, "Category_id": category_id}]
+            self.send_message('ProductChanged', body)
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:

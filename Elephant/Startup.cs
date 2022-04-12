@@ -33,7 +33,7 @@ namespace Elephant
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
+                app.UseExceptionHandler("/");
             }
             app.UseStaticFiles();
 
@@ -43,7 +43,7 @@ namespace Elephant
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Admin}/{action=Index}/{id?}");
+                    template: "{controller=Catalog}/{action=Index}/{id?}");
             });
         }
     }

@@ -1,5 +1,5 @@
 FROM python:3.8-slim AS builder
-COPY ./api/admin/requirements.txt .
+COPY ./api/catalog/requirements.txt .
 
 RUN apt-get update \
     && apt-get -y install libpq-dev gcc \
@@ -9,10 +9,10 @@ FROM python:3.8-slim
 WORKDIR /code
 
 COPY --from=builder /root/.local /root/.local
-COPY ./api/admin/admin_api.py .
-ENV FLASK_APP=admin_api.py
+COPY ./api/catalog/catalog_api.py .
+ENV FLASK_APP=catalog_api.py
+ENV MONGO_CONN_STR=mongodb://root:example@mongo:27017/
 
 ENV PATH=/root/.local:$PATH
-EXPOSE 5000
-
-CMD [ "python", "-m" , "flask", "run", "--host=admin_api", "--port=5000"]
+EXPOSE 5001
+CMD [ "python", "-m" , "flask", "run", "--host=catalog_api", "--port=5001"]

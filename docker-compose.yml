@@ -41,6 +41,19 @@ services:
       - nginx_network
     env_file:
       - api/admin/api_variables.env
+
+  catalog_api:
+    container_name: catalog_api
+    restart: always
+    build:
+      context: .
+      dockerfile: api/catalog/Dockerfile
+    ports:
+      - "5001:5001"
+    links:
+      - "mongo:mongo"
+    networks:
+      - nginx_network
   
   catalog_consumer:
     container_name: catalog_consumer

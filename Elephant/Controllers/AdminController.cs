@@ -77,7 +77,7 @@ namespace Elephant.Controllers
                 var result = JsonConvert.DeserializeObject<List<Category>>(jsonResult);
                 ViewData["CategoryID"] = result[0].Id;
                 ViewData["CategoryName"] = result[0].Name;
-                ViewData["ParentID"] = result[0].ParentId ?? Guid.Empty;
+                ViewData["ParentID"] = result[0].ParentId;
 
                 var uri2 = new Uri("http://admin_api:5000/api/category");
                 var response2 = await client.GetAsync(uri2);

@@ -6,7 +6,6 @@ namespace Elephant.Models
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public Guid? ParentId { get; set; }
-
+        public string ParentId { get; set; }
     }
 }

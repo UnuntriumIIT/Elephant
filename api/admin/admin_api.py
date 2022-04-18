@@ -96,7 +96,7 @@ class Category(Resource):
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
                            INSERT INTO public."Category_Major" (id, "Name", "ParentId")
-                           VALUES ('%s'::text, '%s'::text, %s);'''%(id, name, parentId))
+                           VALUES ('%s'::text, '%s'::text, '%s');'''%(id, name, parentId))
             body = [{"Id" : id, "Name" : name, "ParentId": parentId}]
             self.send_message('CategoryCreated', body)
         except (Exception, Error) as error:
@@ -117,7 +117,7 @@ class Category(Resource):
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
                            UPDATE public."Category_Major"
-                           SET "Name" = '%s'::text, "ParentId" = %s
+                           SET "Name" = '%s'::text, "ParentId" = '%s'
                            WHERE id LIKE '%s' ESCAPE '#';'''%(name, parentId, id))
             body = [{"Id" : id, "Name" : name, "ParentId": parentId}]
             self.send_message('CategoryChanged', body)
@@ -161,8 +161,6 @@ class Category(Resource):
     def post(self, id):
         name = request.form.get('name')
         parentId = request.form.get('parcats')
-        if (parentId != 'NULL'):
-                parentId = "'"+ parentId +"'"
         if (request.form.get('_method') == 'put'):
             if(not self.get_record_by_id(id)):
                 return "Category with id %s does not exists"%(id), 400
@@ -310,7 +308,7 @@ class Product(Resource):
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute('''
                             INSERT INTO public."Product" (id, name, image_src, price, quantity, category_id)
-                            VALUES ('%s'::text, '%s'::text, '%s'::text, %s::numeric, %s::integer, %s);'''%(id, name, image_src, price, quantity, category_id))
+                            VALUES ('%s'::text, '%s'::text, '%s'::text, %s::numeric, %s::integer, '%s');'''%(id, name, image_src, price, quantity, category_id))
             body = [{"Id": id, "Name": name, "Image_src": image_src, "Price": price, "Quantity": quantity, "Category_id": category_id}]
             self.send_message('ProductCreated', body)
         except (Exception, Error) as error:
@@ -336,7 +334,7 @@ class Product(Resource):
                                 image_src   = '%s'::text,
                                 price       = %s::numeric,
                                 quantity    = %s::integer,
-                                category_id = %s
+                                category_id = '%s'
                             WHERE id LIKE '%s' ESCAPE '#';'''%(name, image_src, price, quantity, category_id, id))
             body = [{"Id": id, "Name": name, "Image_src": image_src, "Price": price, "Quantity": quantity, "Category_id": category_id}]
             self.send_message('ProductChanged', body)
@@ -362,8 +360,6 @@ class Product(Resource):
         price = request.form.get('price')
         quantity = request.form.get('quantity')
         category_id = request.form.get('cats')
-        if (category_id != 'NULL'):
-                category_id = "'"+ category_id +"'"
         if (request.form.get('_method') == 'put'):
             if(not self.get_record_by_id(id)):
                 return "Category with id %s does not exists"%(id), 400
@@ -407,8 +403,6 @@ try:
 	                    price decimal not null,
                         quantity int default 0 not null,
 	                    category_id text
-		                    constraint product_category_id_fk
-			                    references "Category_Major"
                     );''')
 except (Exception, Error) as error:
         print("Ошибка при работе с PostgreSQL", error)

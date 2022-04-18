@@ -28,7 +28,7 @@ services:
       - nginx_network
 
   admin_api:
-    container_name: Admin_api
+    container_name: admin_api
     restart: always
     build:
       context: .

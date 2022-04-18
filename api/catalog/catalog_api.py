@@ -16,21 +16,8 @@ class Products(Resource):
     
     def findDataAsTrueJSON(self, id):
         dbname = self.getDatabase()
-        collection_category = dbname["category"]
-        collection_product = dbname["product"]
-        
-        category = collection_category.find_one({"Id": id}, {'_id': False})
-        childCats = collection_category.find({"ParentId": "'"+id+"'"}, {'_id': False})
-        products = collection_product.find({"Category_id": "'"+id+"'"}, {'_id': False})
-        if (category and childCats and products):
-            jsonDict = {"Id" : category["Id"], 
-                    "Name" : category["Name"], 
-                    "ChildCategories": list(childCats), 
-                    "Products": list(products)
-                    }
-            return jsonDict
-        else:
-            return "Can't find this ID"
+        collection_union = dbname["union"]
+        return collection_union.find_one({"Id": id}, {'_id': False})
     
     def get(self, id=0): 
         if (id == 0):

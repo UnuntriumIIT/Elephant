@@ -68,6 +68,8 @@ services:
       - nginx_network
     env_file:
       - api/catalog/consumer/consumer_variables.env
+    depends_on:
+      - rabbitmq
 
   rabbitmq:
     image: rabbitmq:management

@@ -93,31 +93,75 @@ def callback(ch, method, properties, body):
         collection_product.insert_one(bodystr[0])
         
     elif (properties.headers['event'] == 'ProductChanged'):
-        collection_product.replace_one({"Id" : bodystr[0].get("Id")}, bodystr[0])
         
-        if bodystr[0].get("Category_id") != 'NULL':
-            union = collection_union.find_one({"Id" : bodystr[0].get("Category_id")}, {'_id': False})
-            for p in union.get("Products"):
-                if p.get("Id") == bodystr[0].get("Id"):
-                    union.get("Products").remove(p)
+        oldcat = collection_product.find_one({"Id": bodystr[0].get("Id")},{'_id': False}).get("Category_id")
+        
+        if bodystr[0].get("Category_id") == oldcat:
+            if bodystr[0].get("Category_id") != 'NULL':
+                union = collection_union.find_one({"Id" : bodystr[0].get("Category_id")}, {'_id': False})
+                for p in union.get("Products"):
+                    if p.get("Id") == bodystr[0].get("Id"):
+                        union.get("Products").remove(p)
+                        union.get("Products").append(bodystr[0])
+                        collection_union.replace_one({"Id" : union.get("Id")}, union)
+            else:
+                union = collection_union.find({"Id" : 'NULL'})
+                for u in list(union):
+                    for p in u.get("Products"):
+                        if p.get("Id") == bodystr[0].get("Id"):
+                            u.get("Products").remove(p)
+                            u.get("Products").append(bodystr[0])
+                            collection_union.replace_one({"_id" : u.get("_id")}, u)
+        else:
+            if oldcat == 'NULL':
+                union = collection_union.find({"Id" : oldcat})
+                for u in list(union):
+                    for p in u.get("Products"):
+                        if p.get("Id") == bodystr[0].get("Id"):
+                            collection_union.delete_one({"_id": u.get("_id")})
+                union = collection_union.find_one({"Id" : bodystr[0].get("Category_id")}, {'_id': False})
+                union.get("Products").append(bodystr[0])
+                collection_union.replace_one({"Id" : union.get("Id")}, union)
+            else:
+                if bodystr[0].get("Category_id") == 'NULL':
+                    union = collection_union.find_one({"Id" : oldcat}, {'_id': False})
+                    for p in union.get("Products"):
+                        if p.get("Id") == bodystr[0].get("Id") :
+                            union.get("Products").remove(p)
+                            collection_union.replace_one({"Id" : union.get("Id")}, union)
+                    js = {"Id" : 'NULL',
+                      "Name" : 'NULL',
+                      "ChildCategories" : 'NULL',
+                      "Products" : [ bodystr[0] ]
+                    }
+                    collection_union.insert_one(js)
+                else:
+                    union = collection_union.find_one({"Id" : oldcat}, {'_id': False})
+                    for p in union.get("Products"):
+                        if p.get("Id") == bodystr[0].get("Id") :
+                            union.get("Products").remove(p)
+                            collection_union.replace_one({"Id" : union.get("Id")}, union)
+                    union = collection_union.find_one({"Id" : bodystr[0].get("Category_id")}, {'_id': False})
                     union.get("Products").append(bodystr[0])
                     collection_union.replace_one({"Id" : union.get("Id")}, union)
-        else:
-            union = collection_union.find({"Id" : 'NULL'}, {'_id': False})
-            for u in union:
-                for p in u.get("Products"):
-                    if p.get("Id") == bodystr[0].get("Id"):
-                        u.get("Products").remove(p)
-                        u.get("Products").append(bodystr[0])
-                        collection_union.replace_one({"Id" : union.get("Id")}, union)
+        collection_product.replace_one({"Id" : bodystr[0].get("Id")}, bodystr[0])
         
     elif (properties.headers['event'] == 'ProductDeleted'):
-        collection_product.delete_many(bodystr[0])
-        union = collection_union.find_one({"Id" : bodystr[0].get("Category_id")}, {'_id': False})
-        for p in union.get("Products"):
-            if p.get("Id") == bodystr[0].get("Id"):
-                union.get("Products").remove(p)
-                collection_union.delete_one({"Id" : union.get("Id")})
+        catid = collection_product.find_one({"Id": bodystr[0].get("Id")},{'_id': False}).get("Category_id")
+        if catid != 'NULL':
+            union = collection_union.find_one({"Id" : catid}, {'_id': False})
+            for p in union.get("Products"):
+                if p.get("Id") == bodystr[0].get("Id") :
+                    union.get("Products").remove(p)
+                    collection_union.replace_one({"Id" : union.get("Id")}, union)
+        else:
+            union = collection_union.find({"Id" : catid})
+            for u in list(union):
+                for p in u.get("Products"):
+                    if p.get("Id") == bodystr[0].get("Id"):
+                        collection_union.delete_one({"_id": u.get("_id")})
+        collection_product.delete_many({"Id":bodystr[0].get("Id")})
+                        
                     
     else:
         print("Error in events")

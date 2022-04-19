@@ -33,7 +33,7 @@
             <option value="NULL">Без категории</option>
             @foreach (var item in ViewData["catsForProducts"] as IEnumerable<Elephant.Models.Category>)
             {
-                if (item.Id.ToString() == (string)ViewData["ProductCategoryId"])
+                if (item.Id == (string)ViewData["ProductCategoryId"])
                 {
                     <option value="@item.Id" selected>@item.Name</option>
                 }

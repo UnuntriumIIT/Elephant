@@ -32,7 +32,7 @@
                 <td>@Html.DisplayFor(a => item.Price)</td>
                 <td>@Html.DisplayFor(a => item.Quantity)</td>
                 <td>@Html.DisplayFor(a => (ViewData["categoriesAssign"] as IEnumerable<Elephant.Models.Category>)
-                                                .Where(p => p.Id.ToString() == item.Category_id).FirstOrDefault().Name)</td>
+                                                .Where(p => p.Id == item.Category_id).FirstOrDefault().Name)</td>
                 <td>
                     <a href="/admin/editproduct/@item.Id"
                         class="btn btn-light d-inline-flex m-2"

@@ -20,16 +20,16 @@
     }
     @foreach (var item in ViewData["CatalogCats"] as IEnumerable<Elephant.Models.Category>)
     {
-        if ((string)ViewData["CatID"] == item.Id.ToString())
+        if ((string)ViewData["CatID"] == item.Id)
         {
             <div class="w-25">
-                <a href="/catalog/index?id=@item.Id" class="btn btn-warning d-flex m-2" role="button">@item.Name</a>
+                <a href="/catalog/index?id=@item.Id" class="btn btn-warning d-flex m-2" role="button">@(item.Name == "NULL" ? "Без категории": item.Name)</a>
             </div>
         }
         else
         {
             <div class="w-25">
-                <a href="/catalog/index?id=@item.Id" class="btn btn-info d-flex m-2" role="button">@item.Name</a>
+                <a href="/catalog/index?id=@item.Id" class="btn btn-info d-flex m-2" role="button">@(item.Name == "NULL" ? "Без категории": item.Name)</a>
             </div>
         }
     }

@@ -84,9 +84,13 @@ def callback(ch, method, properties, body):
             union.get("Products").append(bodystr[0])
             collection_union.replace_one({"Id" : union.get("Id")}, union)
         else:
+            jsonString = {"Id" : 'NULL',
+                      "Name" : 'NULL',
+                      "ParentId" : 'NULL'}
+            collection_category.insert_one(jsonString)
             js = {"Id" : 'NULL',
                   "Name" : 'NULL',
-                  "ChildCategories" : 'NULL',
+                  "ChildCategories" : [],
                   "Products" : [ bodystr[0] ]
                 }
             collection_union.insert_one(js)
@@ -119,6 +123,8 @@ def callback(ch, method, properties, body):
                     for p in u.get("Products"):
                         if p.get("Id") == bodystr[0].get("Id"):
                             collection_union.delete_one({"_id": u.get("_id")})
+                            if (list(collection_union.find({"Id":"NULL"})).count() < 1):
+                                collection_category.delete_many({"Id": "NULL"})
                 union = collection_union.find_one({"Id" : bodystr[0].get("Category_id")}, {'_id': False})
                 union.get("Products").append(bodystr[0])
                 collection_union.replace_one({"Id" : union.get("Id")}, union)
@@ -131,10 +137,14 @@ def callback(ch, method, properties, body):
                             collection_union.replace_one({"Id" : union.get("Id")}, union)
                     js = {"Id" : 'NULL',
                       "Name" : 'NULL',
-                      "ChildCategories" : 'NULL',
+                      "ChildCategories" : [],
                       "Products" : [ bodystr[0] ]
                     }
                     collection_union.insert_one(js)
+                    jsonString = {"Id" : 'NULL',
+                      "Name" : 'NULL',
+                      "ParentId" : 'NULL'}
+                    collection_category.insert_one(jsonString)
                 else:
                     union = collection_union.find_one({"Id" : oldcat}, {'_id': False})
                     for p in union.get("Products"):
@@ -155,11 +165,13 @@ def callback(ch, method, properties, body):
                     union.get("Products").remove(p)
                     collection_union.replace_one({"Id" : union.get("Id")}, union)
         else:
-            union = collection_union.find({"Id" : catid})
+            union = collection_union.find({"Id" : catid})   
             for u in list(union):
                 for p in u.get("Products"):
                     if p.get("Id") == bodystr[0].get("Id"):
                         collection_union.delete_one({"_id": u.get("_id")})
+                        if (list(collection_union.find({"Id":"NULL"})).count() < 1):
+                                collection_category.delete_many({"Id": "NULL"})
         collection_product.delete_many({"Id":bodystr[0].get("Id")})
                         
                     

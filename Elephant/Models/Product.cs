@@ -4,7 +4,7 @@ namespace Elephant.Models
 {
     public class Product
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string Name { get; set; }
         public string Image_src { get; set; }
         public decimal Price { get; set; }

@@ -25,7 +25,7 @@
             <option value="NULL">Без родительской категории</option>
             @foreach (var item in ViewData["catsForChilds"] as IEnumerable<Elephant.Models.Category>)
             {
-                if (item.Id.ToString() == (string)ViewData["ParentID"])
+                if (item.Id == (string)ViewData["ParentID"])
                 {
                     <option value="@item.Id" selected>@item.Name</option>
                 }

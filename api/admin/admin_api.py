@@ -71,11 +71,12 @@ class Category(Resource):
                                     host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute('''
-                           SELECT t.*
-                           FROM public."Category_Major" t
-                           WHERE id = '%s'
-                           '''%(id))
+            q = '''
+                    SELECT t.*
+                    FROM public."Category_Major" t
+                    WHERE id = %s
+                    '''
+            cursor.execute(q, (id,))
             result = cursor.fetchall()
             return result
         except (Exception, Error) as error:
@@ -94,9 +95,9 @@ class Category(Resource):
                                     host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute('''
-                           INSERT INTO public."Category_Major" (id, "Name", "ParentId")
-                           VALUES ('%s'::text, '%s'::text, '%s');'''%(id, name, parentId))
+            query = '''INSERT INTO public."Category_Major" (id, "Name", "ParentId")
+                           VALUES (%s, %s, %s);'''
+            cursor.execute(query, (id, name, parentId))
             body = [{"Id" : id, "Name" : name, "ParentId": parentId}]
             self.send_message('CategoryCreated', body)
         except (Exception, Error) as error:
@@ -115,10 +116,11 @@ class Category(Resource):
                                     host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute('''
-                           UPDATE public."Category_Major"
-                           SET "Name" = '%s'::text, "ParentId" = '%s'
-                           WHERE id LIKE '%s' ESCAPE '#';'''%(name, parentId, id))
+            q= '''
+                    UPDATE public."Category_Major"
+                    SET "Name" = %s, "ParentId" = %s
+                    WHERE id LIKE %s ESCAPE '#';'''
+            cursor.execute(q, (name, parentId, id))
             body = [{"Id" : id, "Name" : name, "ParentId": parentId}]
             self.send_message('CategoryChanged', body)
         except (Exception, Error) as error:
@@ -137,10 +139,11 @@ class Category(Resource):
                                     host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute('''
-                           DELETE
-                           FROM public."Category_Major"
-                           WHERE id LIKE '%s' ESCAPE '#';'''%(id))
+            q = '''
+                DELETE
+                FROM public."Category_Major"
+                WHERE id LIKE %s ESCAPE '#';'''
+            cursor.execute(q, (id, ))
             body = [{"Id" : id}]
             self.send_message('CategoryDeleted', body)
         except (Exception, Error) as error:
@@ -184,10 +187,11 @@ class Childs(Resource):
                                     host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute('''
-                           SELECT t.*
-                           FROM public."Category_Major" t
-                           WHERE "ParentId" = '%s' '''%(id))
+            q = '''
+                SELECT t.*
+                FROM public."Category_Major" t
+                WHERE "ParentId" = %s '''
+            cursor.execute(q, (id, ))
             result = cursor.fetchall()
             return result
         except (Exception, Error) as error:
@@ -239,10 +243,11 @@ class Product(Resource):
                                     host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute('''
-                           DELETE
-                           FROM public."Product"
-                           WHERE id LIKE '%s' ESCAPE '#';'''%(id))
+            q = '''
+                DELETE
+                FROM public."Product"
+                WHERE id LIKE %s ESCAPE '#';'''
+            cursor.execute(q, (id, ))
             body = [{"Id" : id}]
             self.send_message('ProductDeleted', body)
         except (Exception, Error) as error:
@@ -283,11 +288,12 @@ class Product(Resource):
                                     host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute('''
+            q = '''
                            SELECT t.*
                            FROM public."Product" t
-                           WHERE id = '%s'
-                           '''%(id))
+                           WHERE id = %s
+                           '''
+            cursor.execute(q, (id,))
             result = cursor.fetchall()
             return result
         except (Exception, Error) as error:
@@ -306,9 +312,10 @@ class Product(Resource):
                                     host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute('''
-                            INSERT INTO public."Product" (id, name, image_src, price, quantity, category_id)
-                            VALUES ('%s'::text, '%s'::text, '%s'::text, %s::numeric, %s::integer, '%s');'''%(id, name, image_src, price, quantity, category_id))
+            q = '''
+                INSERT INTO public."Product" (id, name, image_src, price, quantity, category_id)
+                VALUES (%s, %s, %s, %s, %s, %s);'''
+            cursor.execute(q, (id, name, image_src, price, quantity, category_id))
             body = [{"Id": id, "Name": name, "Image_src": image_src, "Price": price, "Quantity": quantity, "Category_id": category_id}]
             self.send_message('ProductCreated', body)
         except (Exception, Error) as error:
@@ -327,15 +334,16 @@ class Product(Resource):
                                     host=os.environ['DB_HOST'])
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute('''
-                            UPDATE public."Product"
-                            SET
-                                name        = '%s'::text,
-                                image_src   = '%s'::text,
-                                price       = %s::numeric,
-                                quantity    = %s::integer,
-                                category_id = '%s'
-                            WHERE id LIKE '%s' ESCAPE '#';'''%(name, image_src, price, quantity, category_id, id))
+            q= '''
+                UPDATE public."Product"
+                SET
+                    name        = %s,
+                    image_src   = %s,
+                    price       = %s,
+                    quantity    = %s,
+                    category_id = %s
+                WHERE id LIKE %s ESCAPE '#';'''
+            cursor.execute(q, (name, image_src, price, quantity, category_id, id))
             body = [{"Id": id, "Name": name, "Image_src": image_src, "Price": price, "Quantity": quantity, "Category_id": category_id}]
             self.send_message('ProductChanged', body)
         except (Exception, Error) as error:

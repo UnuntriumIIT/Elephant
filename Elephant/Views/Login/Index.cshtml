@@ -8,16 +8,26 @@
     </h1>
 </div>
 <a class="btn btn-light d-inline-flex m-2" href="/login/registration">Регистрация</a>
-<form method="post" action="http://gateway:5003/api/login">
+<form method="post" action="http://localhost:5003/auth/login">
     <div class="form-group">
         <label for="login">Login</label>
         <input type="text" class="form-control" id="login" name="login" placeholder="Enter login">
     </div>
     <div class="form-group">
         <label for="password1">Password</label>
-        <input type="password" class="form-control" id="password1" placeholder="Password">
+        <input type="password" class="form-control" id="password1" name="password1" placeholder="Password">
     </div>
     <div class="form-group">
-        <button type="submit" class="btn btn-info">Войти</button>
+        <button onclick="mySubmit(this)" type="submit" class="btn btn-info">Войти</button>
     </div>
 </form>
+
+<script>
+    function mySubmit(obj) {
+        var pwdObj = document.getElementById('password1');
+        var hashObj = new jsSHA("SHA-512", "TEXT", { numRounds: 1 });
+        hashObj.update(pwdObj.value);
+        var hash = hashObj.getHash("HEX");
+        pwdObj.value = hash;
+    }
+</script>

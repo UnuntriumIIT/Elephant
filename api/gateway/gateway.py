@@ -1,6 +1,5 @@
-from flask import Flask, redirect, make_response, request
+from flask import Flask, redirect, make_response, request,url_for
 import requests
-import json
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from psycopg2 import Error
@@ -8,6 +7,7 @@ from psycopg2.extras import RealDictCursor
 import os
 import jwt
 import uuid;
+import logging
 
 app = Flask(__name__)
 
@@ -41,11 +41,13 @@ def initDB():
             cursor.close()
             conn.close()
             print("Соединение с PostgreSQL закрыто")
-
-@app.route('/auth/register/<login>/<passwordHash>')
-def register(login, passwordHash):
+initDB()
+@app.route('/auth/register', methods=['POST'])
+def register():
+    login = request.form.get('login')
+    passwordHash = request.form.get('password1')
     if isExistLogin(login):
-        return json.dumps({"message" : "This Login is exists!"}), 409
+        return redirect(os.environ['FRONTEND_HOST']+'login/registration')
     try:
         conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 
                                 user=os.environ['DB_USER'], 
@@ -54,32 +56,36 @@ def register(login, passwordHash):
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         q = '''
-                       INSERT INTO "User" VALUES (%s, %s, %s);
+                       INSERT INTO public."User" VALUES (%s, %s, %s);
             '''
             
         q2 = '''
-                       INSERT INTO "Role" VALUES (%s, 'U');
+                       INSERT INTO public."Role" VALUES (%s, 'U');
              '''
-        user_id = uuid.uuid4()
+        user_id = str(uuid.uuid4())
         cursor.execute(q, (user_id, login, passwordHash))
         cursor.execute(q2, (user_id, ))
-        return redirect(os.environ['FRONTEND_HOST']+'login/index', code=302)        
+        return redirect(os.environ['FRONTEND_HOST']+'login/index')        
     except (Exception, Error) as error:
-           print("Ошибка при работе с PostgreSQL", error)
+           logging.warning("Ошибка при работе с PostgreSQL " + str(error))
+           return redirect(os.environ['FRONTEND_HOST']+'login/registration')
     finally:
         if conn:
             cursor.close()
             conn.close()
             print("Соединение с PostgreSQL закрыто") 
-    return ''
       
-@app.route('/auth/login/<login>/<passwordHash>')      
-def login(login, passwordHash):
+@app.route('/auth/login', methods=['POST'])      
+def login():
+    login = request.form.get('login')
+    passwordHash = request.form.get('password1')
     if isCorrectCredentials(login, passwordHash):
-        payload = {"id": '\"'+getIdByLogin(login)+'\"', "login" : '\"'+login+'\"', "role" : '\"'+getRoleByLogin(login)+'\"'}
+        logging.warning('login: '+login+', role: '+str(getRoleByLogin(login))+', id: '+ str(getIdByLogin(login)))
+        payload = {"id": getIdByLogin(login), "login" : login, "role" : getRoleByLogin(login)}
         jwtForUser = jwt.encode(payload, signing_key, algorithm="HS256")
         response = make_response(redirect(os.environ['FRONTEND_HOST']))
         response.set_cookie('auth', jwtForUser)
+        response.headers['location'] = 'http://localhost/'
         return response
     return redirect(os.environ['FRONTEND_HOST']+'login/index')
 
@@ -87,34 +93,51 @@ def login(login, passwordHash):
 def logout():
     response = make_response(redirect(os.environ['FRONTEND_HOST']))
     response.set_cookie('auth', '', expires=0)
+    response.headers['location'] = 'http://localhost/'
     return response
 
-@app.route('/api/<direction>/<endpoint>/<parameter>')
-def handleRequest(direction, endpoint, parameter):
-    jwt_token = request.cookies.get('auth')
-    payload = jwt.decode(jwt_token, signing_key, algorithms=["HS256"])
-    if payload.get('role') == 'A':
+@app.route('/api/<direction>')
+def handleRequest(direction):
+    endpoint = request.args.get('endpoint')
+    parameter = request.args.get('parameter')
+    other_parameter = request.args.get('other_parameter')
+    cookie_auth = request.cookies.get('auth')
+    logging.warning(cookie_auth)
+    role = 'U'
+    if cookie_auth:
+        jwt_token = str.encode(cookie_auth)
+        payload = jwt.decode(jwt_token, signing_key, algorithms=["HS256"])
+        logging.warning(payload)
+        role = payload.get('role')
+    
+    if role == 'A':
         if direction == 'admin':
             resp = handleAdmin(endpoint, parameter)
             return resp
-        return 'Forbidden', 403
+        return redirect(os.environ['FRONTEND_HOST']+'error/not_found')
     
-    if payload.get('role') == 'U':
+    if role == 'U':
         if direction == 'admin':
-            return 'Forbidden', 403
+            return redirect(os.environ['FRONTEND_HOST']+'error/forbidden')
     
     if direction == 'user':
-        resp = handleUser(endpoint, parameter)
+        resp = handleUser(endpoint, parameter, other_parameter)
         return resp
         
 
 def handleAdmin(endpoint, parameter):
     host = os.environ['API_ADMIN_HOST']    
-    return requests.get(host+endpoint+'/'+parameter).content
+    if endpoint and parameter:
+        return requests.get(host+'api/'+endpoint+'/'+parameter).content
+    elif endpoint and not parameter:
+        return requests.get(host+'api/'+endpoint).content
 
-def handleUser(endpoint, parameter):
+def handleUser(endpoint, parameter, other_parameter):
     host = os.environ['API_CATALOG_HOST']
-    return requests.get(host+endpoint+'/'+parameter).content
+    if endpoint and parameter and other_parameter:
+        return requests.get(host+'api/'+endpoint+'/'+parameter+'/'+other_parameter).content
+    elif endpoint and parameter and not other_parameter:
+        return requests.get(host+'api/'+endpoint+'/'+parameter).content
 
 def isCorrectCredentials(login, password):
     try:
@@ -210,7 +233,7 @@ def getRoleByLogin(login):
             '''
         cursor.execute(q, (login,))
         result = cursor.fetchall()
-        return result.get("RoleValue")
+        return result[0].get('RoleValue')
     except (Exception, Error) as error:
            print("Ошибка при работе с PostgreSQL", error)
     finally:
@@ -234,7 +257,7 @@ def getIdByLogin(login):
             '''
         cursor.execute(q, (login,))
         result = cursor.fetchall()
-        return result.get("Id")
+        return result[0].get('Id')
     except (Exception, Error) as error:
            print("Ошибка при работе с PostgreSQL", error)
     finally:

@@ -19,7 +19,7 @@ namespace Elephant.Controllers
                 {
                     ViewData["CatID"] = id;
                     using var client1 = new HttpClient();
-                    var uri1 = new Uri("http://catalog_api:5001/api/catalog/products/" + id);
+                    var uri1 = new Uri("http://gateway:5003/api/user?endpoint=catalog&parameter=products&other_parameter=" + id);
                     var response1 = await client1.GetAsync(uri1);
                     string json1 = await response1.Content.ReadAsStringAsync();
                     var jsonResult1 = JsonConvert.DeserializeObject(json1).ToString();
@@ -32,7 +32,7 @@ namespace Elephant.Controllers
                         {
                             var q = item.TryGetValue("Id", out string idcat);
                             using var client2 = new HttpClient();
-                            var uri2 = new Uri("http://catalog_api:5001/api/catalog/products/" + idcat);
+                            var uri2 = new Uri("http://gateway:5003/api/user?endpoint=catalog&parameter=products&other_parameter=" + idcat);
                             var response2 = await client2.GetAsync(uri2);
                             string json2 = await response2.Content.ReadAsStringAsync();
                             var jsonResult2 = JsonConvert.DeserializeObject(json2).ToString();
@@ -45,7 +45,7 @@ namespace Elephant.Controllers
                 {
                     ViewData["CatID"] = id;
                     using var client1 = new HttpClient();
-                    var uri1 = new Uri("http://catalog_api:5001/api/catalog/products/" + id);
+                    var uri1 = new Uri("http://gateway:5003/api/user?endpoint=catalog&parameter=products&other_parameter=" + id);
                     var response1 = await client1.GetAsync(uri1);
                     string json1 = await response1.Content.ReadAsStringAsync();
                     var jsonResult1 = JsonConvert.DeserializeObject(json1).ToString();
@@ -56,7 +56,7 @@ namespace Elephant.Controllers
             }
             using (var client = new HttpClient())
             {
-                var uri = new Uri("http://catalog_api:5001/api/catalog/categories");
+                var uri = new Uri("http://gateway:5003/api/user?endpoint=catalog&parameter=categories");
                 var response = await client.GetAsync(uri);
                 string json = await response.Content.ReadAsStringAsync();
                 var jsonResult = JsonConvert.DeserializeObject(json).ToString();

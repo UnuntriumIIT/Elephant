@@ -11,17 +11,19 @@ services:
       - "80:80"
     links:
       - "postgres:postgres"
-      - "admin_api:admin_api"
+      - "gateway:gateway"
     networks:
       - nginx_network
 
   postgres:
     container_name: Postgres
     image: postgres:latest
+    volumes:
+      - ./pg_init:/docker-entrypoint-initdb.d
     environment:
-      POSTGRES_DB: "elephant"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "admin"
+      - POSTGRES_MULTIPLE_DATABASES=elephant,authdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
     ports:
       - "5432:5432"
     networks:
@@ -54,6 +56,22 @@ services:
       - "mongo:mongo"
     networks:
       - nginx_network
+
+  gateway:
+    container_name: gateway
+    restart: always
+    build:
+      context: .
+      dockerfile: api/gateway/Dockerfile
+    ports:
+      - "5003:5003"
+    links:
+      - "admin_api:admin_api"
+      - "catalog_api:catalog_api"
+    networks:
+      - nginx_network
+    env_file:
+      - api/gateway/gateway.env
   
   catalog_consumer:
     container_name: catalog_consumer

@@ -18,17 +18,28 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> Catalog()
         {
-            using (var client = new HttpClient())
+            using (var client = new HttpClient(new HttpClientHandler{AllowAutoRedirect = false}))
             {
-                var uri = new Uri("http://admin_api:5000/api/catalog");
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=catalog");
                 var response = await client.GetAsync(uri);
+                Console.WriteLine(response.StatusCode);
+                if (response.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json = await response.Content.ReadAsStringAsync();
                 var jsonResult = JsonConvert.DeserializeObject(json).ToString();
                 var result = JsonConvert.DeserializeObject<List<Product>>(jsonResult);
                 ViewData["products"] = result ?? new List<Product>();
 
-                var uri1 = new Uri("http://admin_api:5000/api/category");
+                var uri1 = new Uri("http://gateway:5003/api/admin?endpoint=category");
                 var response1 = await client.GetAsync(uri1);
+                if (response1.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response1.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json1 = await response1.Content.ReadAsStringAsync();
                 var jsonResult1 = JsonConvert.DeserializeObject(json1).ToString();
                 var result1 = JsonConvert.DeserializeObject<List<Category>>(jsonResult1);
@@ -39,10 +50,15 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> Categories()
         {
-            using (var client = new HttpClient())
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
             {
-                var uri = new Uri("http://admin_api:5000/api/category");
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category");
                 var response = await client.GetAsync(uri);
+                if (response.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json = await response.Content.ReadAsStringAsync();
                 var jsonResult = JsonConvert.DeserializeObject(json).ToString();
                 var result = JsonConvert.DeserializeObject<List<Category>>(jsonResult);
@@ -54,10 +70,15 @@ namespace Elephant.Controllers
         public async Task<IActionResult> AddCategory()
         {
             ViewData["UUID"] = Guid.NewGuid().ToString();
-            using (var client = new HttpClient())
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
             {
-                var uri = new Uri("http://admin_api:5000/api/category");
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category");
                 var response = await client.GetAsync(uri);
+                if (response.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json = await response.Content.ReadAsStringAsync();
                 var jsonResult = JsonConvert.DeserializeObject(json).ToString();
                 var result = JsonConvert.DeserializeObject<List<Category>>(jsonResult);
@@ -68,10 +89,15 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> EditCategory(string id)
         {
-            using (var client = new HttpClient())
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
             {
-                var uri = new Uri("http://admin_api:5000/api/category/"+id);
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category&parameter=" + id);
                 var response = await client.GetAsync(uri);
+                if (response.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json = await response.Content.ReadAsStringAsync();
                 var jsonResult = JsonConvert.DeserializeObject(json).ToString();
                 var result = JsonConvert.DeserializeObject<List<Category>>(jsonResult);
@@ -79,15 +105,25 @@ namespace Elephant.Controllers
                 ViewData["CategoryName"] = result[0].Name;
                 ViewData["ParentID"] = result[0].ParentId;
 
-                var uri2 = new Uri("http://admin_api:5000/api/category");
+                var uri2 = new Uri("http://gateway:5003/api/admin?endpoint=category");
                 var response2 = await client.GetAsync(uri2);
+                if (response2.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response2.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json2 = await response2.Content.ReadAsStringAsync();
                 var jsonResult2 = JsonConvert.DeserializeObject(json2).ToString();
                 var result2 = JsonConvert.DeserializeObject<List<Category>>(jsonResult2);
                 ViewData["catsForChilds"] = result2 ?? new List<Category>();
 
-                var uri1 = new Uri("http://admin_api:5000/api/categorychilds/" + id);
+                var uri1 = new Uri("http://gateway:5003/api/admin?endpoint=categorychilds&parameter=" + id);
                 var response1 = await client.GetAsync(uri1);
+                if (response1.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response1.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json1 = await response1.Content.ReadAsStringAsync();
                 var jsonResult1 = JsonConvert.DeserializeObject(json1).ToString();
                 var result1 = JsonConvert.DeserializeObject<List<Category>>(jsonResult1);
@@ -98,10 +134,15 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> DeleteCategory(string id)
         {
-            using (var client = new HttpClient())
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
             {
-                var uri = new Uri("http://admin_api:5000/api/category/" + id);
-                await client.DeleteAsync(uri);
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category&parameter=" + id);
+                var response1 = await client.DeleteAsync(uri);
+                if (response1.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response1.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
             }
             return Redirect("/admin/categories");
         }
@@ -109,10 +150,15 @@ namespace Elephant.Controllers
         public async Task<IActionResult> AddProduct()
         {
             ViewData["UUIDp"] = Guid.NewGuid().ToString();
-            using (var client = new HttpClient())
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
             {
-                var uri = new Uri("http://admin_api:5000/api/category");
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category");
                 var response = await client.GetAsync(uri);
+                if (response.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json = await response.Content.ReadAsStringAsync();
                 var jsonResult = JsonConvert.DeserializeObject(json).ToString();
                 var result = JsonConvert.DeserializeObject<List<Category>>(jsonResult);
@@ -123,20 +169,30 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> DeleteProduct(string id)
         {
-            using (var client = new HttpClient())
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
             {
-                var uri = new Uri("http://admin_api:5000/api/catalog/" + id);
-                await client.DeleteAsync(uri);
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=catalog&parameter=" + id);
+                var response = await client.DeleteAsync(uri);
+                if (response.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
             }
             return Redirect("/admin/catalog");
         }
 
         public async Task<IActionResult> EditProduct(string id)
         {
-            using (var client = new HttpClient())
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
             {
-                var uri = new Uri("http://admin_api:5000/api/catalog/" + id);
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=catalog&parameter" + id);
                 var response = await client.GetAsync(uri);
+                if (response.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json = await response.Content.ReadAsStringAsync();
                 var jsonResult = JsonConvert.DeserializeObject(json).ToString();
                 var result = JsonConvert.DeserializeObject<List<Product>>(jsonResult);
@@ -147,8 +203,13 @@ namespace Elephant.Controllers
                 ViewData["ProductQuantity"] = result.Where(a => a.Id.ToString() == id).First().Quantity;
                 ViewData["ProductCategoryId"] = result.Where(a => a.Id.ToString() == id).First().Category_id;
 
-                var uri1 = new Uri("http://admin_api:5000/api/category");
+                var uri1 = new Uri("http://gateway:5003/api/admin?endpoint=category");
                 var response1 = await client.GetAsync(uri1);
+                if (response1.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response1.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
                 string json1 = await response1.Content.ReadAsStringAsync();
                 var jsonResult1 = JsonConvert.DeserializeObject(json1).ToString();
                 var result1 = JsonConvert.DeserializeObject<List<Category>>(jsonResult1);

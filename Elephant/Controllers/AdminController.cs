@@ -6,23 +6,57 @@ using System.Collections.Generic;
 using Elephant.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Elephant.Controllers
 {
     public class AdminController : Controller
     {
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }))
+            {
+                ViewData["JWT"] = Request.Cookies["auth"];
+                var jwt = Request.Cookies["auth"];
+                if (jwt != null)
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var token = handler.ReadJwtToken(jwt);
+                    ViewData["Role"] = token.Payload["role"];
+                }
+                else
+                {
+                    ViewData["Role"] = null;
+                }
+                var uri = new Uri("http://gateway:5003/api/admin?token="+Request.Cookies["auth"]);
+                var response = await client.GetAsync(uri);
+                if (response.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    var redirectUri = response.Headers.Location;
+                    return Redirect(redirectUri.ToString());
+                }
+            }
             return View();
         }
 
         public async Task<IActionResult> Catalog()
         {
-            using (var client = new HttpClient(new HttpClientHandler{AllowAutoRedirect = false}))
+            using (var client = new HttpClient(new HttpClientHandler{AllowAutoRedirect = false, UseCookies = false }))
             {
-                var uri = new Uri("http://gateway:5003/api/admin?endpoint=catalog");
+                ViewData["JWT"] = Request.Cookies["auth"];
+                var jwt = Request.Cookies["auth"];
+                if (jwt != null)
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var token = handler.ReadJwtToken(jwt);
+                    ViewData["Role"] = token.Payload["role"];
+                }
+                else
+                {
+                    ViewData["Role"] = null;
+                }
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=catalog&token=" + Request.Cookies["auth"]);
                 var response = await client.GetAsync(uri);
-                Console.WriteLine(response.StatusCode);
                 if (response.StatusCode == System.Net.HttpStatusCode.Found)
                 {
                     var redirectUri = response.Headers.Location;
@@ -33,7 +67,7 @@ namespace Elephant.Controllers
                 var result = JsonConvert.DeserializeObject<List<Product>>(jsonResult);
                 ViewData["products"] = result ?? new List<Product>();
 
-                var uri1 = new Uri("http://gateway:5003/api/admin?endpoint=category");
+                var uri1 = new Uri("http://gateway:5003/api/admin?endpoint=category&token=" + Request.Cookies["auth"]);
                 var response1 = await client.GetAsync(uri1);
                 if (response1.StatusCode == System.Net.HttpStatusCode.Found)
                 {
@@ -50,9 +84,21 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> Categories()
         {
-            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }))
             {
-                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category");
+                ViewData["JWT"] = Request.Cookies["auth"];
+                var jwt = Request.Cookies["auth"];
+                if (jwt != null)
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var token = handler.ReadJwtToken(jwt);
+                    ViewData["Role"] = token.Payload["role"];
+                }
+                else
+                {
+                    ViewData["Role"] = null;
+                }
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category&token=" + Request.Cookies["auth"]);
                 var response = await client.GetAsync(uri);
                 if (response.StatusCode == System.Net.HttpStatusCode.Found)
                 {
@@ -69,10 +115,22 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> AddCategory()
         {
-            ViewData["UUID"] = Guid.NewGuid().ToString();
-            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
+            ViewData["JWT"] = Request.Cookies["auth"];
+            var jwt = Request.Cookies["auth"];
+            if (jwt != null)
             {
-                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category");
+                var handler = new JwtSecurityTokenHandler();
+                var token = handler.ReadJwtToken(jwt);
+                ViewData["Role"] = token.Payload["role"];
+            }
+            else
+            {
+                ViewData["Role"] = null;
+            }
+            ViewData["UUID"] = Guid.NewGuid().ToString();
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }))
+            {
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category&token=" + Request.Cookies["auth"]);
                 var response = await client.GetAsync(uri);
                 if (response.StatusCode == System.Net.HttpStatusCode.Found)
                 {
@@ -89,9 +147,21 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> EditCategory(string id)
         {
-            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }))
             {
-                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category&parameter=" + id);
+                ViewData["JWT"] = Request.Cookies["auth"];
+                var jwt = Request.Cookies["auth"];
+                if (jwt != null)
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var token = handler.ReadJwtToken(jwt);
+                    ViewData["Role"] = token.Payload["role"];
+                }
+                else
+                {
+                    ViewData["Role"] = null;
+                }
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category&parameter=" + id + "&token=" + Request.Cookies["auth"]);
                 var response = await client.GetAsync(uri);
                 if (response.StatusCode == System.Net.HttpStatusCode.Found)
                 {
@@ -105,7 +175,7 @@ namespace Elephant.Controllers
                 ViewData["CategoryName"] = result[0].Name;
                 ViewData["ParentID"] = result[0].ParentId;
 
-                var uri2 = new Uri("http://gateway:5003/api/admin?endpoint=category");
+                var uri2 = new Uri("http://gateway:5003/api/admin?endpoint=category&token=" + Request.Cookies["auth"]);
                 var response2 = await client.GetAsync(uri2);
                 if (response2.StatusCode == System.Net.HttpStatusCode.Found)
                 {
@@ -117,7 +187,7 @@ namespace Elephant.Controllers
                 var result2 = JsonConvert.DeserializeObject<List<Category>>(jsonResult2);
                 ViewData["catsForChilds"] = result2 ?? new List<Category>();
 
-                var uri1 = new Uri("http://gateway:5003/api/admin?endpoint=categorychilds&parameter=" + id);
+                var uri1 = new Uri("http://gateway:5003/api/admin?endpoint=categorychilds&parameter=" + id + "&token=" + Request.Cookies["auth"]);
                 var response1 = await client.GetAsync(uri1);
                 if (response1.StatusCode == System.Net.HttpStatusCode.Found)
                 {
@@ -134,9 +204,21 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> DeleteCategory(string id)
         {
-            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }))
             {
-                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category&parameter=" + id);
+                ViewData["JWT"] = Request.Cookies["auth"];
+                var jwt = Request.Cookies["auth"];
+                if (jwt != null)
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var token = handler.ReadJwtToken(jwt);
+                    ViewData["Role"] = token.Payload["role"];
+                }
+                else
+                {
+                    ViewData["Role"] = null;
+                }
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category&parameter=" + id + "&token=" + Request.Cookies["auth"]);
                 var response1 = await client.DeleteAsync(uri);
                 if (response1.StatusCode == System.Net.HttpStatusCode.Found)
                 {
@@ -149,10 +231,22 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> AddProduct()
         {
-            ViewData["UUIDp"] = Guid.NewGuid().ToString();
-            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
+            ViewData["JWT"] = Request.Cookies["auth"];
+            var jwt = Request.Cookies["auth"];
+            if (jwt != null)
             {
-                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category");
+                var handler = new JwtSecurityTokenHandler();
+                var token = handler.ReadJwtToken(jwt);
+                ViewData["Role"] = token.Payload["role"];
+            }
+            else
+            {
+                ViewData["Role"] = null;
+            }
+            ViewData["UUIDp"] = Guid.NewGuid().ToString();
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }))
+            {
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=category&token=" + Request.Cookies["auth"]);
                 var response = await client.GetAsync(uri);
                 if (response.StatusCode == System.Net.HttpStatusCode.Found)
                 {
@@ -169,9 +263,21 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> DeleteProduct(string id)
         {
-            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }))
             {
-                var uri = new Uri("http://gateway:5003/api/admin?endpoint=catalog&parameter=" + id);
+                ViewData["JWT"] = Request.Cookies["auth"];
+                var jwt = Request.Cookies["auth"];
+                if (jwt != null)
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var token = handler.ReadJwtToken(jwt);
+                    ViewData["Role"] = token.Payload["role"];
+                }
+                else
+                {
+                    ViewData["Role"] = null;
+                }
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=catalog&parameter=" + id + "&token=" + Request.Cookies["auth"]);
                 var response = await client.DeleteAsync(uri);
                 if (response.StatusCode == System.Net.HttpStatusCode.Found)
                 {
@@ -184,9 +290,21 @@ namespace Elephant.Controllers
 
         public async Task<IActionResult> EditProduct(string id)
         {
-            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }))
+            using (var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false }))
             {
-                var uri = new Uri("http://gateway:5003/api/admin?endpoint=catalog&parameter" + id);
+                ViewData["JWT"] = Request.Cookies["auth"];
+                var jwt = Request.Cookies["auth"];
+                if (jwt != null)
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var token = handler.ReadJwtToken(jwt);
+                    ViewData["Role"] = token.Payload["role"];
+                }
+                else
+                {
+                    ViewData["Role"] = null;
+                }
+                var uri = new Uri("http://gateway:5003/api/admin?endpoint=catalog&parameter" + id + "&token=" + Request.Cookies["auth"]);
                 var response = await client.GetAsync(uri);
                 if (response.StatusCode == System.Net.HttpStatusCode.Found)
                 {

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -13,6 +14,20 @@ namespace Elephant.Controllers
     {
         public async Task<IActionResult> Index(string id)
         {
+            ViewData["JWT"] = Request.Cookies["auth"];
+            var jwt = Request.Cookies["auth"];
+            if (jwt != null)
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var token = handler.ReadJwtToken(jwt);
+                ViewData["Role"] = token.Payload["role"];
+            } else
+            {
+                ViewData["Role"] = null;
+            }
+            
+            Console.WriteLine(ViewData["JWT"]);
+            Console.WriteLine(ViewData["Role"]);
             if (id != null)
             {
                 if (id != "NULL")

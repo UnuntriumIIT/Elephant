@@ -1,4 +1,4 @@
-from flask import Flask, redirect, make_response, request,url_for
+from flask import Flask, redirect, make_response, request
 import requests
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
@@ -85,7 +85,7 @@ def login():
         jwtForUser = jwt.encode(payload, signing_key, algorithm="HS256")
         response = make_response(redirect(os.environ['FRONTEND_HOST']))
         response.set_cookie('auth', jwtForUser)
-        response.headers['location'] = 'http://localhost/'
+        response.headers['location'] = os.environ['FRONTEND_HOST']
         return response
     return redirect(os.environ['FRONTEND_HOST']+'login/index')
 
@@ -93,16 +93,17 @@ def login():
 def logout():
     response = make_response(redirect(os.environ['FRONTEND_HOST']))
     response.set_cookie('auth', '', expires=0)
-    response.headers['location'] = 'http://localhost/'
+    response.headers['location'] = os.environ['FRONTEND_HOST']
     return response
 
-@app.route('/api/<direction>')
+@app.route('/api/<direction>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def handleRequest(direction):
     endpoint = request.args.get('endpoint')
     parameter = request.args.get('parameter')
     other_parameter = request.args.get('other_parameter')
-    cookie_auth = request.cookies.get('auth')
+    cookie_auth = request.args.get('token')
     logging.warning(cookie_auth)
+    method = request.method
     role = 'U'
     if cookie_auth:
         jwt_token = str.encode(cookie_auth)
@@ -112,7 +113,7 @@ def handleRequest(direction):
     
     if role == 'A':
         if direction == 'admin':
-            resp = handleAdmin(endpoint, parameter)
+            resp = handleAdmin(endpoint, parameter, method)
             return resp
         return redirect(os.environ['FRONTEND_HOST']+'error/not_found')
     
@@ -125,12 +126,28 @@ def handleRequest(direction):
         return resp
         
 
-def handleAdmin(endpoint, parameter):
-    host = os.environ['API_ADMIN_HOST']    
-    if endpoint and parameter:
-        return requests.get(host+'api/'+endpoint+'/'+parameter).content
-    elif endpoint and not parameter:
-        return requests.get(host+'api/'+endpoint).content
+def handleAdmin(endpoint, parameter, method):
+    host = os.environ['API_ADMIN_HOST']
+    if method == 'GET':    
+        if endpoint and parameter:
+            return requests.get(host+'api/'+endpoint+'/'+parameter).content
+        elif endpoint and not parameter:
+            return requests.get(host+'api/'+endpoint).content
+    elif method == 'POST':
+        if endpoint and parameter:
+            return requests.post(host+'api/'+endpoint+'/'+parameter).content
+        elif endpoint and not parameter:
+            return requests.post(host+'api/'+endpoint).content
+    elif method == 'PUT':
+        if endpoint and parameter:
+            return requests.put(host+'api/'+endpoint+'/'+parameter).content
+        elif endpoint and not parameter:
+            return requests.put(host+'api/'+endpoint).content
+    elif method == 'DELETE':
+        if endpoint and parameter:
+            return requests.delete(host+'api/'+endpoint+'/'+parameter).content
+        elif endpoint and not parameter:
+            return requests.delete(host+'api/'+endpoint).content
 
 def handleUser(endpoint, parameter, other_parameter):
     host = os.environ['API_CATALOG_HOST']

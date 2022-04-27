@@ -124,6 +124,10 @@ def handleRequest(direction):
     if direction == 'user':
         resp = handleUser(endpoint, parameter, other_parameter)
         return resp
+    
+    if direction == 'cart' and cookie_auth:
+        resp = handleCart(parameter, method, cookie_auth)
+        return resp
         
 
 def handleAdmin(endpoint, parameter, method):
@@ -155,7 +159,16 @@ def handleUser(endpoint, parameter, other_parameter):
         return requests.get(host+'api/'+endpoint+'/'+parameter+'/'+other_parameter).content
     elif endpoint and parameter and not other_parameter:
         return requests.get(host+'api/'+endpoint+'/'+parameter).content
-
+    
+def handleCart(parameter, method, cookie_auth):
+    host = os.environ['API_CART_HOST']
+    if method == 'GET':
+        return requests.get(host+'api/cart', headers={'Authorization': cookie_auth}).content
+    elif method == 'POST':
+        return requests.post(host+'api/cart/'+parameter, headers={'Authorization': cookie_auth}).content
+    elif method == 'DELETE':
+        return requests.delete(host+'api/cart/'+parameter, headers={'Authorization': cookie_auth}).content
+    
 def isCorrectCredentials(login, password):
     try:
         conn = psycopg2.connect(dbname=os.environ['DB_NAME'], 

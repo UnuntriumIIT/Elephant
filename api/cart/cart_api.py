@@ -27,12 +27,12 @@ class Cart(Resource):
         return requests.get(self.admin_api_host + 'api/catalog/'+product_id).content
     
     def get(self):
-        user_id = self.getUserId(request.cookies.get('auth'))
+        user_id = self.getUserId(request.headers['Authorization'])
         coll = self.getCollection()
         return json.dumps(coll.find_one({"User_Id": user_id}, {'_id': False}))
     
     def post(self, product_id):
-        user_id = self.getUserId(request.cookies.get('auth'))
+        user_id = self.getUserId(request.headers['Authorization'])
         product = self.getProductFromAdmin(product_id)
         cart = self.getCollection()
         user_cart = cart.find_one({"User_Id": user_id}, {'_id': False})
@@ -72,7 +72,7 @@ class Cart(Resource):
         return redirect("http://localhost/cart", code=302)
     
     def delete(self, product_id):
-        user_id = self.getUserId(request.cookies.get('auth'))
+        user_id = self.getUserId(request.headers['Authorization'])
         cart = self.getCollection()
         user_cart = cart.find_one({"User_Id" : user_id}, {'_id': False})
         for i in user_cart.get('Products'):

@@ -29,7 +29,6 @@ def callback(ch, method, properties, body):
     collection_category = dbname["category"]
     collection_union = dbname["union"]
     collection_product = dbname["product"]
-    jsonString = {}
     
     if (properties.headers['event'] == 'CategoryCreated'):
         jsonString = {"Id" : bodystr[0].get("Id"),

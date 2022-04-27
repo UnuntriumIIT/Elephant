@@ -12,22 +12,47 @@ connection = pika.BlockingConnection(
                               credentials))
 
 channel = connection.channel()
-channel.queue_declare(queue=os.environ['RABBIT_QUEUE'] , 
+channel.queue_declare(queue=os.environ['RABBIT_CART_QUEUE'] , 
                       durable=True, 
                       exclusive=False, 
                       auto_delete=False)
 
-def getDatabase():
+def getCollection():
     CONNECTION_STRING = os.environ['MONGO_CONN_STR']
     client = MongoClient(CONNECTION_STRING)
-    return client['elephant_cart']
+    return client['elephant_cart']["cart"]
+
+def edit_product(collection, data):
+    carts = collection.find({}, {'_id': False})
+    for cart in carts:
+        for pr in cart.get('Products'):
+            if data.get('Id') == pr.get('Id'):
+                cart['Total'] -= int(pr.get('Price')) * int(pr.get('Quantity_in_cart'))
+                cart['Total'] += int(data.get('Price')) * int(pr.get('Quantity_in_cart'))
+                pr['Name'] = data.get('Name')
+                pr['Price'] = data.get('Price')
+                collection.replace_one({"User_Id": cart.get("User_Id")}, cart)
+
+def delete_product(collection, data):
+    carts = collection.find({}, {'_id': False})
+    for cart in carts:
+        for pr in cart.get('Products'):
+            if data.get('Id') == pr.get('Id'):
+                cart['Total'] -= int(pr.get('Price')) * int(pr.get('Quantity_in_cart'))
+                cart.get('Products').remove(pr)
+                collection.replace_one({"User_Id": cart.get("User_Id")}, cart)
 
 def callback(ch, method, properties, body):
     bodystr = json.loads(body.decode())
-    dbname = getDatabase()
-    collection_cart = dbname["cart"]
+    collection = getCollection()
+    
+    if (properties.headers['event'] == 'Changed'):
+        edit_product(collection, bodystr[0])
+    elif (properties.headers['event'] == 'Deleted'):
+        delete_product(collection, bodystr[0])
+    ch.basic_ack(method.delivery_tag, False)
 
-channel.basic_consume(queue=os.environ['RABBIT_QUEUE'], on_message_callback=callback)
+channel.basic_consume(queue=os.environ['RABBIT_CART_QUEUE'], on_message_callback=callback)
 
 try:
     channel.start_consuming()

@@ -57,6 +57,38 @@ services:
     networks:
       - nginx_network
 
+  cart_api:
+    container_name: cart_api
+    restart: always
+    build:
+      context: .
+      dockerfile: api/cart/Dockerfile
+    ports:
+      - "5004:5004"
+    links:
+      - "admin_api:admin_api"
+      - "mongo:mongo"
+    networks:
+      - nginx_network
+    env_file:
+      - api/cart/api_variables.env
+
+  cart_consumer:
+    container_name: cart_consumer
+    restart: always
+    build:
+      context: .
+      dockerfile: api/cart/consumer/Dockerfile
+    links:
+      - "rabbitmq:rabbitmq"
+      - "mongo:mongo"
+    networks:
+      - nginx_network
+    env_file:
+      - api/cart/consumer/consumer_variables.env
+    depends_on:
+      - rabbitmq
+
   gateway:
     container_name: gateway
     restart: always

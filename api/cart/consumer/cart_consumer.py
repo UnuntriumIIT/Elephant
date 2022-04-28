@@ -60,6 +60,8 @@ def callback(ch, method, properties, body):
     elif (properties.headers['event'] == 'ProductDeleted'):
         delete_product(collection, {"Id" : bodystr[0].get("Id")})
         ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
+    else:
+        ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
         
 channel.basic_consume(queue='cart', on_message_callback=callback)
 

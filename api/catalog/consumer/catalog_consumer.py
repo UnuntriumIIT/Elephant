@@ -2,6 +2,7 @@ import pika
 import os
 import json
 from pymongo import MongoClient
+import logging
 
 credentials = pika.PlainCredentials(os.environ['RABBIT_USER'], 
                                     os.environ['RABBIT_PASSWORD'])
@@ -27,6 +28,7 @@ def getDatabase():
 
 def callback(ch, method, properties, body):
     bodystr = json.loads(body.decode())
+    logging.warning(str(bodystr))
     dbname = getDatabase()
     collection_category = dbname["category"]
     collection_union = dbname["union"]
@@ -178,6 +180,8 @@ def callback(ch, method, properties, body):
                                 collection_category.delete_many({"Id": "NULL"})
         collection_product.delete_many({"Id":bodystr[0].get("Id")})
         ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
+    else:
+        ch.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
         
 channel.basic_consume(queue='catalog', on_message_callback=callback)
 

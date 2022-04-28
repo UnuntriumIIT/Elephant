@@ -40,7 +40,7 @@ namespace Elephant.Controllers
                     var jsonResult1 = JsonConvert.DeserializeObject(json1).ToString();
                     var result1 = JsonConvert.DeserializeObject<CatalogResponse>(jsonResult1);
                     ViewData["CatalogProds"] = result1 ?? new CatalogResponse();
-                    if (result1.ChildCategories.Count > 0)
+                    if (result1 != null && result1.ChildCategories.Count > 0)
                     {
                         List<CatalogResponse> prods = new();
                         foreach (var item in result1.ChildCategories)

@@ -233,7 +233,7 @@ class Product(Resource):
         channel.basic_publish(exchange='shop',
                       routing_key='k',
                       body=json.dumps(body),
-                      properties=pika.BasicProperties(content_type='text/plain',
+                      properties=pika.BasicProperties(content_type='text/plain', delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE,
                                                           headers={'event': header}))    
 
     def delete_record_by_id(self, id):
@@ -318,7 +318,7 @@ class Product(Resource):
                 VALUES (%s, %s, %s, %s, %s, %s);'''
             cursor.execute(q, (id, name, image_src, price, quantity, category_id))
             body = [{"Id": id, "Name": name, "Image_src": image_src, "Price": price, "Quantity": quantity, "Category_id": category_id}]
-            self.send_message('ProductCreated', body, [] , '')
+            self.send_message('ProductCreated', body)
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:

@@ -2,3 +2,4 @@ flask==2.1.1
 psycopg2-binary==2.9.3
 PyJWT
 requests
+passlib

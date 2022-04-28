@@ -8,6 +8,7 @@ import os
 import jwt
 import uuid;
 import logging
+from passlib.hash import pbkdf2_sha256
 
 app = Flask(__name__)
 
@@ -45,7 +46,7 @@ initDB()
 @app.route('/auth/register', methods=['POST'])
 def register():
     login = request.form.get('login')
-    passwordHash = request.form.get('password1')
+    hash_pass = pbkdf2_sha256.hash(request.form.get('password1'))
     if isExistLogin(login):
         return redirect(os.environ['FRONTEND_HOST']+'login/registration')
     try:
@@ -63,7 +64,7 @@ def register():
                        INSERT INTO public."Role" VALUES (%s, 'U');
              '''
         user_id = str(uuid.uuid4())
-        cursor.execute(q, (user_id, login, passwordHash))
+        cursor.execute(q, (user_id, login, hash_pass))
         cursor.execute(q2, (user_id, ))
         return redirect(os.environ['FRONTEND_HOST']+'login/index')        
     except (Exception, Error) as error:
@@ -78,8 +79,8 @@ def register():
 @app.route('/auth/login', methods=['POST'])      
 def login():
     login = request.form.get('login')
-    passwordHash = request.form.get('password1')
-    if isCorrectCredentials(login, passwordHash):
+    password = request.form.get('password1')
+    if isCorrectCredentials(login, password):
         logging.warning('login: '+login+', role: '+str(getRoleByLogin(login))+', id: '+ str(getIdByLogin(login)))
         payload = {"id": getIdByLogin(login), "login" : login, "role" : getRoleByLogin(login)}
         jwtForUser = jwt.encode(payload, signing_key, algorithm="HS256")
@@ -186,15 +187,13 @@ def isCorrectCredentials(login, password):
         q = '''
                        SELECT *
                        FROM public."User" u
-                       WHERE u."Login" = %s AND u."PasswordHash" = %s;
+                       WHERE u."Login" = %s;
             '''
-        cursor.execute(q, (login, password))
-        result = cursor.fetchall()
-        if len(result) == 1:
-            return True
-        return False
+        cursor.execute(q, (login,))
+        result = cursor.fetchone().get('PasswordHash')
+        return pbkdf2_sha256.verify(password, result)
     except (Exception, Error) as error:
-           print("Ошибка при работе с PostgreSQL", error)
+           print(error) 
     finally:
         if conn:
             cursor.close()

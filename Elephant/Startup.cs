@@ -1,15 +1,9 @@
-using data;
-using services;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using data.Repository;
-using StackExchange.Redis;
 
 namespace Elephant
 {
@@ -25,17 +19,12 @@ namespace Elephant
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<UserContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"), x => x.MigrationsAssembly("data")));
-
             services.AddMvc(options => options.EnableEndpointRouting = false);
             services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Latest);
-            services.AddImgList();
-            services.AddScoped<ICacheRepo, ImageCacheRepo>();
-            services.AddScoped<ICacheService, CacheService>();
-            services.AddStackExchangeRedisCache(options =>
+
+            services.Configure<CookiePolicyOptions>(options =>
             {
-                options.Configuration = "redis:6379,abortConnect=false,ssl=false,password=password,connectTimeout=30000,responseTimeout=30000";
+                options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
             services.AddControllersWithViews();
@@ -50,17 +39,17 @@ namespace Elephant
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
+                app.UseExceptionHandler("/");
             }
             app.UseStaticFiles();
-
+            app.UseCookiePolicy();
             app.UseRouting();
 
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    template: "{controller=Catalog}/{action=Index}/{id?}");
             });
         }
     }

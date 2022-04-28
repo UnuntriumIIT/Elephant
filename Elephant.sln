@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elephant", "Elephant\Elepha
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{CED5C00D-0C8E-45C6-8B1E-FC761855B7FD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "data", "data\data.csproj", "{62BEB55C-9C22-4674-9FF2-E4EAFF76F38F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "services", "services\services.csproj", "{CBE80C87-4755-4F60-998F-2366E4245E8C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,14 +21,6 @@ Global
 		{CED5C00D-0C8E-45C6-8B1E-FC761855B7FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CED5C00D-0C8E-45C6-8B1E-FC761855B7FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CED5C00D-0C8E-45C6-8B1E-FC761855B7FD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{62BEB55C-9C22-4674-9FF2-E4EAFF76F38F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{62BEB55C-9C22-4674-9FF2-E4EAFF76F38F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{62BEB55C-9C22-4674-9FF2-E4EAFF76F38F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{62BEB55C-9C22-4674-9FF2-E4EAFF76F38F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CBE80C87-4755-4F60-998F-2366E4245E8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CBE80C87-4755-4F60-998F-2366E4245E8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CBE80C87-4755-4F60-998F-2366E4245E8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CBE80C87-4755-4F60-998F-2366E4245E8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

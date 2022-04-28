@@ -1,0 +1,69 @@
+﻿@{
+    ViewData["Title"] = "Cart page";
+}
+<div class="text-center">
+    <h1>
+        Корзина
+    </h1>
+    <br />
+    <h3>
+        Сумма: @ViewData["Total"]
+    </h3>
+</div>
+@if (ViewData["CartProducts"] != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Название</th>
+                <th scope="col">Стоимость за шт.</th>
+                <th scope="col">Кол-во в корзине</th>
+                <th scope="col">Итог по товару</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in ViewData["CartProducts"] as IEnumerable<Elephant.Models.CartProduct>)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(a => item.Name)</td>
+                    <td>@Html.DisplayFor(a => item.Price)</td>
+                    <td>@Html.DisplayFor(a => item.Quantity_in_cart)</td>
+                    @{ 
+                        var q = int.Parse(item.Quantity_in_cart) * float.Parse(item.Price, System.Globalization.CultureInfo.InvariantCulture);
+                    } 
+                    <td>@Html.DisplayFor(a => q)</td>
+                    <td>
+                        <a href="/cart/plus?pathToRedirect=%2Fcart&Id=@item.Id"
+                           class="btn btn-light d-inline-flex m-2"
+                           role="button">
+                            <img width="25"
+                                 height="25"
+                                 src="https://cdn-icons-png.flaticon.com/512/25/25304.png">
+                        </a>
+                        <a href="/cart/remove?Id=@item.Id"
+                           class="btn btn-danger d-inline-flex m-2"
+                           role="button">
+                            <img width="25"
+                                 height="25"
+                                 src="https://cdn-icons-png.flaticon.com/512/1017/1017530.png">
+                        </a>
+                        <a href="/cart/minus?Id=@item.Id"
+                           class="btn btn-light d-inline-flex m-2"
+                           role="button">
+                            <img width="25"
+                                 height="25"
+                                 src="https://cdn-icons-png.flaticon.com/512/25/25232.png">
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="text-center">
+        <h5>Корзина пуста.</h5>
+    </div>
+}

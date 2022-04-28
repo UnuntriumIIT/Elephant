@@ -1,0 +1,50 @@
+﻿@{
+    ViewData["Title"] = "Catalog - Admin page";
+}
+<div class="text-center">
+    <h1>Редактировать товар</h1>
+</div>
+<div class="d-flex justify-content-end">
+    <div>
+        <a href="/admin/catalog" class="btn btn-info d-inline-flex m-2" role="button">< Вернуться к списку</a>
+    </div>
+</div>
+<form method="post" action="http://localhost:5000/api/catalog/@ViewData["ProductId"] ">
+    <input type="hidden" name="_method" value="put">
+    <div class="form-group">
+        <label for="name">Название товара</label>
+        <input type="text" class="form-control" name="name" value="@ViewData["ProductName"]" placeholder="Название товара">
+    </div>
+    <div class="form-group">
+        <label for="image_src">URL картинки</label>
+        <input type="text" class="form-control" name="image_src" value="@ViewData["ProductImgSrc"]" placeholder="URL картинки">
+    </div>
+    <div class="form-group">
+        <label for="price">Стоимость</label>
+        <input type="text" class="form-control" name="price" value="@ViewData["ProductPrice"]" placeholder="Стоимость">
+    </div>
+    <div class="form-group">
+        <label for="quantity">Количество</label>
+        <input type="text" class="form-control" name="quantity" value="@ViewData["ProductQuantity"]" placeholder="Количество">
+    </div>
+    <div class="form-group">
+        <label for="cats">Категория</label>
+        <select class="form-select" name="cats">
+            <option value="NULL">Без категории</option>
+            @foreach (var item in ViewData["catsForProducts"] as IEnumerable<Elephant.Models.Category>)
+            {
+                if (item.Id == (string)ViewData["ProductCategoryId"])
+                {
+                    <option value="@item.Id" selected>@item.Name</option>
+                }
+                else
+                {
+                    <option value="@item.Id">@item.Name</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-info">Сохранить</button>
+    </div>
+</form>

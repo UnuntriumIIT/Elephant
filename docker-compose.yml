@@ -11,150 +11,161 @@ services:
       - "80:80"
     links:
       - "postgres:postgres"
-      - "redis:redis"
-      - "nginx:nginx"
+      - "gateway:gateway"
     networks:
       - nginx_network
 
   postgres:
     container_name: Postgres
     image: postgres:latest
+    volumes:
+      - ./pg_init:/docker-entrypoint-initdb.d
     environment:
-      POSTGRES_DB: "elephant"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "admin"
+      - POSTGRES_MULTIPLE_DATABASES=elephant,authdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
     ports:
       - "5432:5432"
     networks:
       - nginx_network
 
-  redis:
-    container_name: Redis
-    image: "redis:alpine"
-    command: redis-server --requirepass password
+  admin_api:
+    container_name: admin_api
+    restart: always
+    build:
+      context: .
+      dockerfile: api/admin/Dockerfile
     ports:
-     - "6379:6379"
-    environment:
-     - REDIS_REPLICATION_MODE=master
+      - "5000:5000"
+    links:
+      - "postgres:postgres"
     networks:
       - nginx_network
+    env_file:
+      - api/admin/api_variables.env
+
+  catalog_api:
+    container_name: catalog_api
+    restart: always
+    build:
+      context: .
+      dockerfile: api/catalog/Dockerfile
+    ports:
+      - "5001:5001"
+    links:
+      - "mongo:mongo"
+    networks:
+      - nginx_network
+
+  cart_api:
+    container_name: cart_api
+    restart: always
+    build:
+      context: .
+      dockerfile: api/cart/Dockerfile
+    ports:
+      - "5004:5004"
+    links:
+      - "admin_api:admin_api"
+      - "mongo:mongo"
+    networks:
+      - nginx_network
+    env_file:
+      - api/cart/api_variables.env
+
+  cart_consumer:
+    container_name: cart_consumer
+    restart: always
+    build:
+      context: .
+      dockerfile: api/cart/consumer/Dockerfile
+    links:
+      - "rabbitmq:rabbitmq"
+      - "mongo:mongo"
+    networks:
+      - nginx_network
+    env_file:
+      - api/cart/consumer/consumer_variables.env
+    depends_on:
+      - rabbitmq
+
+  gateway:
+    container_name: gateway
+    restart: always
+    build:
+      context: .
+      dockerfile: api/gateway/Dockerfile
+    ports:
+      - "5003:5003"
+    links:
+      - "admin_api:admin_api"
+      - "catalog_api:catalog_api"
+    networks:
+      - nginx_network
+    env_file:
+      - api/gateway/gateway.env
+  
+  catalog_consumer:
+    container_name: catalog_consumer
+    restart: always
+    build:
+      context: .
+      dockerfile: api/catalog/consumer/Dockerfile
+    links:
+      - "rabbitmq:rabbitmq"
+      - "mongo:mongo"
+    networks:
+      - nginx_network
+    env_file:
+      - api/catalog/consumer/consumer_variables.env
+    depends_on:
+      - rabbitmq
 
   rabbitmq:
     image: rabbitmq:management
     container_name: 'rabbitmq'
     environment:
-            RABBITMQ_DEFAULT_USER: user
-            RABBITMQ_DEFAULT_PASS: password
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
     ports:
-        - 5672:5672
-        - 15672:15672
-    networks:
-      - nginx_network
-
-  nginx:
-    container_name: Nginx
-    image: nginx:latest
+      - 5672:5672
+      - 15672:15672
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    networks:
+      - nginx_network
+
+  mongo:
+    container_name: 'mongo'
+    image: mongo:latest
+    restart: always
     ports:
-        - "5001:80"
-    links:
-      - "api_00:api_00"
-      - "api_10:api_10"
+      - 27017:27017
+    volumes:
+      - mongovolume:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
     networks:
       - nginx_network
 
-  api_00:
-    container_name: api_00
+  mongo-express:
+    container_name: 'mongo-express'
+    image: mongo-express
     restart: always
-    build:
-      context: .
-      dockerfile: ResizeAPI/Pub00/Dockerfile
     ports:
-      - "5000:5000"
-    links:
-    - "rabbitmq:rabbitmq"
-    depends_on:
-        - rabbitmq
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL : "mongodb://root:example@mongo:27017/"
     networks:
       - nginx_network
 
-  api_10:
-    container_name: api_10
-    restart: always
-    build:
-      context: .
-      dockerfile: ResizeAPI/Pub10/Dockerfile
-    ports:
-      - "5010:5000"
-    links:
-      - "rabbitmq:rabbitmq"
-    depends_on:
-        - rabbitmq
-    networks:
-      - nginx_network
-
-  receiver_1:
-    container_name: receiver_1
-    restart: always
-    build:
-      context: .
-      dockerfile: ResizeAPI/Rec/Dockerfile
-    depends_on:
-      - rabbitmq
-    networks:
-      - nginx_network
-
-  receiver_2:
-    container_name: receiver_2
-    restart: always
-    build:
-      context: .
-      dockerfile: ResizeAPI/Rec/Dockerfile
-    depends_on:
-      - rabbitmq
-    networks:
-      - nginx_network
-
-  receiver_3:
-    container_name: receiver_3
-    restart: always
-    build:
-      context: .
-      dockerfile: ResizeAPI/Rec/Dockerfile
-    depends_on:
-      - rabbitmq
-    networks:
-      - nginx_network
-
-  receiver_4:
-    container_name: receiver_4
-    restart: always
-    build:
-      context: .
-      dockerfile: ResizeAPI/Rec/Dockerfile
-    depends_on:
-      - rabbitmq
-    networks:
-      - nginx_network
+volumes:
+  mongovolume:
 
 networks:
    nginx_network:
      driver: bridge
-     ipam:
-      config:
-        - subnet: 172.28.0.0/16
-          ip_range: 172.28.5.0/24
-          gateway: 172.28.5.254
-          aux_addresses:
-            elephant: 172.28.1.5
-            postgres: 172.28.1.6
-            rabbitmq: 172.28.1.7
-            redis: 172.28.1.8
-            nginx: 172.28.1.9
-            api_00: 172.28.1.10
-            api_10: 172.28.1.11
-            receiver_1: 172.28.1.12
-            receiver_2: 172.28.1.13
-            receiver_3: 172.28.1.14
-            receiver_4: 172.28.1.15

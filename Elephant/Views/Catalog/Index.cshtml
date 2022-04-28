@@ -1,0 +1,124 @@
+﻿@{
+    ViewData["Title"] = "Catalog page";
+}
+<div class="text-center">
+    <h1>
+        Каталог
+    </h1>
+    <br />
+    <h3>
+        Категории
+    </h3>
+</div>
+
+<div class="d-flex flex-wrap justify-content-center">
+    @if ((ViewData["CatalogCats"] as IEnumerable<Elephant.Models.Category>).Count() < 1)
+    {
+        <h5>
+            Категорий нет.
+        </h5>
+    }
+    @foreach (var item in ViewData["CatalogCats"] as IEnumerable<Elephant.Models.Category>)
+    {
+        if ((string)ViewData["CatID"] == item.Id)
+        {
+            <div class="w-25">
+                <a href="/catalog/index?id=@item.Id" class="btn btn-warning d-flex m-2" role="button">@(item.Name == "NULL" ? "Без категории": item.Name)</a>
+            </div>
+        }
+        else
+        {
+            <div class="w-25">
+                <a href="/catalog/index?id=@item.Id" class="btn btn-info d-flex m-2" role="button">@(item.Name == "NULL" ? "Без категории": item.Name)</a>
+            </div>
+        }
+    }
+</div>
+<br />
+@if ((string)ViewData["CatID"] != null)
+{
+    <div class="text-center">
+        <h3>
+            Товары в категории
+        </h3>
+    </div>
+    @if ((ViewData["CatalogProds"] as Elephant.Models.CatalogResponse).Products.Count() > 0)
+    {
+        <div class="d-flex flex-wrap justify-content-center">
+            @foreach (var item in (ViewData["CatalogProds"] as Elephant.Models.CatalogResponse).Products)
+            {
+                var b = item.TryGetValue("Name", out string name);
+                b = item.TryGetValue("Image_src", out string img_src);
+                b = item.TryGetValue("Price", out string cost);
+                b = item.TryGetValue("Quantity", out string q);
+                b = item.TryGetValue("Id", out string prod_id);
+                b = item.TryGetValue("Category_id", out string cat_id);
+                <div class="card" style="width: 18rem;">
+                    <img src="@img_src" alt="@name" style="height: 18rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">@name</h5>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Price: @cost</li>
+                        <li class="list-group-item">Quantity: @q</li>
+                    </ul>
+                    <div class="card-body">
+                        <a href="/cart/plus?pathToRedirect=%2Fcatalog%2Findex%3Fid=@cat_id&Id=@prod_id" class="btn btn-success card-link">Добавить в корзину</a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center">
+            <h5>
+                Товаров нет.
+            </h5>
+        </div>
+    }
+    <br />
+    <div class="text-center">
+        <h3>
+            Товары из дочерних категорий
+        </h3>
+    </div>
+    if ((ViewData["Childs"] as List<Elephant.Models.CatalogResponse>) != null)
+    {
+        <div class="d-flex flex-wrap justify-content-center">
+            @foreach (var element in ViewData["Childs"] as List<Elephant.Models.CatalogResponse>)
+            {
+                @foreach (var item in element.Products)
+                {
+                    var b = item.TryGetValue("Name", out string name);
+                    b = item.TryGetValue("Image_src", out string img_src);
+                    b = item.TryGetValue("Price", out string cost);
+                    b = item.TryGetValue("Quantity", out string q);
+                    b = item.TryGetValue("Id", out string prod_id);
+                    b = item.TryGetValue("Category_id", out string cat_id);
+                    <div class="card" style="width: 18rem;">
+                        <img src="@img_src" alt="@name" style="height: 18rem;">
+                        <div class="card-body">
+                            <h5 class="card-title">@name</h5>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Price: @cost</li>
+                            <li class="list-group-item">Quantity: @q</li>
+                        </ul>
+                        <div class="card-body">
+                            <a href="/cart/plus?pathToRedirect=%2Fcatalog%2Findex%3Fid=@cat_id&Id=@prod_id" class="btn btn-success card-link">Добавить в корзину</a>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center">
+            <h5>
+                Товаров нет.
+            </h5>
+        </div>
+    }
+}

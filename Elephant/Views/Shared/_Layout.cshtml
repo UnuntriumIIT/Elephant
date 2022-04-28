@@ -10,8 +10,27 @@
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" href="/">Elephant</a>
+            <div class="container flex-row">
+                <a class="navbar-brand" href="/">Elephant</a>
+                @if (ViewData["JWT"] == null)
+                {
+                    <a class="btn btn-light d-inline-flex m-2" href="/login/index">Вход</a>
+                }
+                else if ((string)ViewData["Role"] == "A")
+                {
+                    <div class="container ml-auto mr-0 flex-row" style="width: 300px;">
+                        <a class="btn btn-light d-inline-flex m-2" href="/admin/index">Админка</a>
+                        <a class="btn btn-light d-inline-flex m-2" href="/cart">Корзина</a>
+                        <a class="btn btn-light d-inline-flex m-2" href="http://localhost:5003/auth/logout">Выход</a>
+                    </div>
+                }
+                else if ((string)ViewData["Role"] == "U")
+                {
+                    <div class="container ml-auto mr-0 flex-row" style="width: 250px;">
+                        <a class="btn btn-light d-inline-flex m-2" href="/cart">Корзина</a>
+                        <a class="btn btn-light d-inline-flex m-2" href="http://localhost:5003/auth/logout">Выход</a>
+                    </div>
+                }
             </div>
         </nav>
     </header>
@@ -23,7 +42,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2021 - Elephant
+            &copy; 2022 - Elephant
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

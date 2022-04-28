@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Elephant.Models
+﻿namespace Elephant.Models
 {
     public class Product
     {

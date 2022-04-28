@@ -12,23 +12,26 @@ connection = pika.BlockingConnection(
                               credentials))
 
 channel = connection.channel()
-channel.queue_declare(queue=os.environ['RABBIT_CART_QUEUE'] , 
+channel.queue_declare(queue='cart' , 
                       durable=True, 
                       exclusive=False, 
                       auto_delete=False)
+channel.exchange_declare('shop', durable=True)
+channel.queue_bind('cart', 'shop', routing_key='k')
 
 def getCollection():
     CONNECTION_STRING = os.environ['MONGO_CONN_STR']
     client = MongoClient(CONNECTION_STRING)
-    return client['elephant_cart']["cart"]
+    db = client['elephant_cart']
+    return db["cart"]
 
 def edit_product(collection, data):
     carts = collection.find({}, {'_id': False})
     for cart in carts:
         for pr in cart.get('Products'):
             if data.get('Id') == pr.get('Id'):
-                cart['Total'] -= int(pr.get('Price')) * int(pr.get('Quantity_in_cart'))
-                cart['Total'] += int(data.get('Price')) * int(pr.get('Quantity_in_cart'))
+                cart['Total'] = str(float(cart['Total'])- (float(pr.get('Price')) * int(pr.get('Quantity_in_cart'))))
+                cart['Total'] = str(float(cart['Total'])+ (float(data.get('Price')) * int(pr.get('Quantity_in_cart'))))
                 pr['Name'] = data.get('Name')
                 pr['Price'] = data.get('Price')
                 collection.replace_one({"User_Id": cart.get("User_Id")}, cart)
@@ -38,7 +41,7 @@ def delete_product(collection, data):
     for cart in carts:
         for pr in cart.get('Products'):
             if data.get('Id') == pr.get('Id'):
-                cart['Total'] -= int(pr.get('Price')) * int(pr.get('Quantity_in_cart'))
+                cart['Total'] = str(float(cart['Total'])- (int(pr.get('Price')) * int(pr.get('Quantity_in_cart'))))
                 cart.get('Products').remove(pr)
                 collection.replace_one({"User_Id": cart.get("User_Id")}, cart)
 
@@ -46,13 +49,19 @@ def callback(ch, method, properties, body):
     bodystr = json.loads(body.decode())
     collection = getCollection()
     
-    if (properties.headers['event'] == 'Changed'):
-        edit_product(collection, bodystr[0])
-    elif (properties.headers['event'] == 'Deleted'):
-        delete_product(collection, bodystr[0])
-    ch.basic_ack(method.delivery_tag, False)
-
-channel.basic_consume(queue=os.environ['RABBIT_CART_QUEUE'], on_message_callback=callback)
+    if (properties.headers['event'] == 'ProductChanged'):
+        edit_product(collection, {
+            "Id" : bodystr[0].get("Id"), 
+            "Name" : bodystr[0].get("Name"), 
+            "Price": bodystr[0].get("Price")
+            })
+        ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
+        
+    elif (properties.headers['event'] == 'ProductDeleted'):
+        delete_product(collection, {"Id" : bodystr[0].get("Id")})
+        ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
+        
+channel.basic_consume(queue='cart', on_message_callback=callback)
 
 try:
     channel.start_consuming()

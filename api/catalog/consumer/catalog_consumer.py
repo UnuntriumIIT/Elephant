@@ -12,10 +12,12 @@ connection = pika.BlockingConnection(
                               credentials))
 
 channel = connection.channel()
-channel.queue_declare(queue=os.environ['RABBIT_QUEUE'] , 
+channel.queue_declare(queue='catalog' , 
                       durable=True, 
                       exclusive=False, 
                       auto_delete=False)
+channel.exchange_declare('shop', durable=True)
+channel.queue_bind('catalog', 'shop', routing_key='k')
 
 def getDatabase():
     CONNECTION_STRING = os.environ['MONGO_CONN_STR']
@@ -44,6 +46,7 @@ def callback(ch, method, properties, body):
             del bodystr[0]['_id']
             parent.get("ChildCategories").append(bodystr[0])
             collection_union.replace_one({"Id" : bodystr[0].get("ParentId")}, parent)
+        ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
         
     elif (properties.headers['event'] == 'CategoryChanged'):
         chcats = collection_category.find({"ParentId" : "'"+bodystr[0].get("Id")+"'"}, {'_id': False})
@@ -65,7 +68,7 @@ def callback(ch, method, properties, body):
                         collection_union.replace_one({"Id" : upd.get("Id")}, upd)
             parent.get("ChildCategories").append(bodystr[0])
             collection_union.replace_one({"Id" : bodystr[0].get("ParentId")}, parent)
-        
+        ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)        
         
     elif (properties.headers['event'] == 'CategoryDeleted'):
         for old in list(collection_union.find({}, {'_id': False})):
@@ -76,6 +79,7 @@ def callback(ch, method, properties, body):
                         collection_union.replace_one({"Id" : upd.get("Id")}, upd)
         collection_union.delete_many(bodystr[0])
         collection_category.delete_many(bodystr[0])
+        ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
         
     elif (properties.headers['event'] == 'ProductCreated'):
         if bodystr[0].get("Category_id") != 'NULL':
@@ -94,9 +98,9 @@ def callback(ch, method, properties, body):
                 }
             collection_union.insert_one(js)
         collection_product.insert_one(bodystr[0])
+        ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
         
     elif (properties.headers['event'] == 'ProductChanged'):
-        
         oldcat = collection_product.find_one({"Id": bodystr[0].get("Id")},{'_id': False}).get("Category_id")
         
         if bodystr[0].get("Category_id") == oldcat:
@@ -154,6 +158,7 @@ def callback(ch, method, properties, body):
                     union.get("Products").append(bodystr[0])
                     collection_union.replace_one({"Id" : union.get("Id")}, union)
         collection_product.replace_one({"Id" : bodystr[0].get("Id")}, bodystr[0])
+        ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
         
     elif (properties.headers['event'] == 'ProductDeleted'):
         catid = collection_product.find_one({"Id": bodystr[0].get("Id")},{'_id': False}).get("Category_id")
@@ -172,13 +177,9 @@ def callback(ch, method, properties, body):
                         if (list(collection_union.find({"Id":"NULL"})).count() < 1):
                                 collection_category.delete_many({"Id": "NULL"})
         collection_product.delete_many({"Id":bodystr[0].get("Id")})
-                        
-                    
-    else:
-        print("Error in events")
-    ch.basic_ack(method.delivery_tag, False)
-    
-channel.basic_consume(queue=os.environ['RABBIT_QUEUE'], on_message_callback=callback)
+        ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
+        
+channel.basic_consume(queue='catalog', on_message_callback=callback)
 
 try:
     channel.start_consuming()

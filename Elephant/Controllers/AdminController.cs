@@ -321,7 +321,7 @@ namespace Elephant.Controllers
                 ViewData["ProductQuantity"] = result.Where(a => a.Id.ToString() == id).First().Quantity;
                 ViewData["ProductCategoryId"] = result.Where(a => a.Id.ToString() == id).First().Category_id;
 
-                var uri1 = new Uri("http://gateway:5003/api/admin?endpoint=category");
+                var uri1 = new Uri("http://gateway:5003/api/admin?endpoint=category&token=" + Request.Cookies["auth"]);
                 var response1 = await client.GetAsync(uri1);
                 if (response1.StatusCode == System.Net.HttpStatusCode.Found)
                 {

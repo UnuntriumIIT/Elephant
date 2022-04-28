@@ -115,19 +115,23 @@ def handleRequest(direction):
         if direction == 'admin':
             resp = handleAdmin(endpoint, parameter, method)
             return resp
+        if direction == 'user':
+            resp = handleUser(endpoint, parameter, other_parameter)
+            return resp
+        if direction == 'cart' and cookie_auth:
+            resp = handleCart(endpoint, parameter, method, cookie_auth)
+            return resp
         return redirect(os.environ['FRONTEND_HOST']+'error/not_found')
     
     if role == 'U':
         if direction == 'admin':
             return redirect(os.environ['FRONTEND_HOST']+'error/forbidden')
-    
-    if direction == 'user':
-        resp = handleUser(endpoint, parameter, other_parameter)
-        return resp
-    
-    if direction == 'cart' and cookie_auth:
-        resp = handleCart(parameter, method, cookie_auth)
-        return resp
+        if direction == 'user':
+            resp = handleUser(endpoint, parameter, other_parameter)
+            return resp
+        if direction == 'cart' and cookie_auth:
+            resp = handleCart(endpoint, parameter, method, cookie_auth)
+            return resp
         
 
 def handleAdmin(endpoint, parameter, method):
@@ -160,13 +164,15 @@ def handleUser(endpoint, parameter, other_parameter):
     elif endpoint and parameter and not other_parameter:
         return requests.get(host+'api/'+endpoint+'/'+parameter).content
     
-def handleCart(parameter, method, cookie_auth):
+def handleCart(endpoint, parameter, method, cookie_auth):
     host = os.environ['API_CART_HOST']
     if method == 'GET':
         return requests.get(host+'api/cart', headers={'Authorization': cookie_auth}).content
     elif method == 'POST':
         return requests.post(host+'api/cart/'+parameter, headers={'Authorization': cookie_auth}).content
     elif method == 'DELETE':
+        if endpoint == 'deleteall':
+            return requests.delete(host+'api/cart/'+parameter+'?deleteall=Y', headers={'Authorization': cookie_auth}).content
         return requests.delete(host+'api/cart/'+parameter, headers={'Authorization': cookie_auth}).content
     
 def isCorrectCredentials(login, password):

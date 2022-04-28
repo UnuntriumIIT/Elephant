@@ -51,6 +51,7 @@
                 b = item.TryGetValue("Image_src", out string img_src);
                 b = item.TryGetValue("Price", out string cost);
                 b = item.TryGetValue("Quantity", out string q);
+                b = item.TryGetValue("Id", out string prod_id);
                 <div class="card" style="width: 18rem;">
                     <img src="@img_src" alt="@name" style="height: 18rem;">
                     <div class="card-body">
@@ -61,7 +62,7 @@
                         <li class="list-group-item">Quantity: @q</li>
                     </ul>
                     <div class="card-body">
-                        <a href="#" class="btn btn-success card-link">Buy</a>
+                        <a href="/cart/plus?pathToRedirect=%2F&Id=@prod_id" class="btn btn-success card-link">Добавить в корзину</a>
                     </div>
                 </div>
             }
@@ -92,6 +93,7 @@
                     b = item.TryGetValue("Image_src", out string img_src);
                     b = item.TryGetValue("Price", out string cost);
                     b = item.TryGetValue("Quantity", out string q);
+                    b = item.TryGetValue("Id", out string prod_id);
                     <div class="card" style="width: 18rem;">
                         <img src="@img_src" alt="@name" style="height: 18rem;">
                         <div class="card-body">
@@ -102,7 +104,7 @@
                             <li class="list-group-item">Quantity: @q</li>
                         </ul>
                         <div class="card-body">
-                            <a href="#" class="btn btn-success card-link">Buy</a>
+                            <a href="/cart/plus?pathToRedirect=%2F&Id=@prod_id" class="btn btn-success card-link">Добавить в корзину</a>
                         </div>
                     </div>
                 }

@@ -208,7 +208,6 @@ class Childs(Resource):
         return "Category not found with id = "+ str(id), 404
 
 class Product(Resource):
-    
     def send_message(self, header, body):
         credentials = pika.PlainCredentials(os.environ['RABBIT_USER'], 
                                             os.environ['RABBIT_PASSWORD'])
@@ -219,47 +218,23 @@ class Product(Resource):
                                       credentials))
         
         channel = connection.channel()
-        channel.queue_declare(queue=os.environ['RABBIT_QUEUE'] , 
+        channel.queue_declare(queue='catalog' , 
                               durable=True, 
                               exclusive=False, 
                               auto_delete=False)
-        channel.confirm_delivery()
-        try:
-            channel.basic_publish(exchange='',
-                          routing_key=os.environ['RABBIT_QUEUE'],
-                          body=json.dumps(body),
-                          properties=pika.BasicProperties(content_type='text/plain',
-                                                              delivery_mode=1,
-                                                              headers={'event': header}))
-            print('publish: '+header+ " " + body)        
-        except pika.exceptions.UnroutableError as error:
-            print(error)
-    
-    def notify_cart(self, header, body):
-        credentials = pika.PlainCredentials(os.environ['RABBIT_USER'], 
-                                            os.environ['RABBIT_PASSWORD'])
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(os.environ['RABBIT_HOST'], 
-                                      os.environ['RABBIT_PORT'], 
-                                      '/', 
-                                      credentials))
-        
-        channel = connection.channel()
-        channel.queue_declare(queue=os.environ['RABBIT_CART_QUEUE'] , 
+        channel.queue_declare(queue='cart' , 
                               durable=True, 
                               exclusive=False, 
                               auto_delete=False)
+        channel.exchange_declare('shop', durable=True)
+        channel.queue_bind('catalog', 'shop', routing_key='k')
+        channel.queue_bind('cart', 'shop', routing_key='k')
         channel.confirm_delivery()
-        try:
-            channel.basic_publish(exchange='',
-                          routing_key=os.environ['RABBIT_CART_QUEUE'],
-                          body=json.dumps(body),
-                          properties=pika.BasicProperties(content_type='text/plain',
-                                                              delivery_mode=1,
-                                                              headers={'event': header}))
-            print('publish: '+header+ " " + body)        
-        except pika.exceptions.UnroutableError as error:
-            print(error)
+        channel.basic_publish(exchange='shop',
+                      routing_key='k',
+                      body=json.dumps(body),
+                      properties=pika.BasicProperties(content_type='text/plain',
+                                                          headers={'event': header}))    
 
     def delete_record_by_id(self, id):
         try:
@@ -276,7 +251,6 @@ class Product(Resource):
             cursor.execute(q, (id, ))
             body = [{"Id" : id}]
             self.send_message('ProductDeleted', body)
-            self.notify_cart('Deleted', body)
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
@@ -344,7 +318,7 @@ class Product(Resource):
                 VALUES (%s, %s, %s, %s, %s, %s);'''
             cursor.execute(q, (id, name, image_src, price, quantity, category_id))
             body = [{"Id": id, "Name": name, "Image_src": image_src, "Price": price, "Quantity": quantity, "Category_id": category_id}]
-            self.send_message('ProductCreated', body)
+            self.send_message('ProductCreated', body, [] , '')
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
@@ -373,7 +347,6 @@ class Product(Resource):
             cursor.execute(q, (name, image_src, price, quantity, category_id, id))
             body = [{"Id": id, "Name": name, "Image_src": image_src, "Price": price, "Quantity": quantity, "Category_id": category_id}]
             self.send_message('ProductChanged', body)
-            self.notify_cart('Changed', [{"Id": id, "Name": name, "Price": price}])
         except (Exception, Error) as error:
                print("Ошибка при работе с PostgreSQL", error)
         finally:
